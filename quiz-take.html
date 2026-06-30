@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="kapitalvoice.css?v=5">
 <style>
-/* ===== QUIZ TAKE PAGE ===== */
+
 .quiz-shell {
   min-height: 100vh;
   background: var(--bg);
@@ -83,7 +83,7 @@
 }
 .quiz-exit-btn:hover { border-color: var(--danger); color: var(--danger); }
 
-/* ===== MAIN QUIZ AREA ===== */
+
 .quiz-main {
   flex: 1;
   display: flex;
@@ -156,7 +156,7 @@
   overflow-wrap: break-word;
   white-space: pre-wrap;
 }
-/* Если текст вопроса очень длинный — уменьшаем шрифт автоматически */
+
 .qcard-text.long { font-size: 17px; }
 .qcard-text.xlong { font-size: 14px; line-height: 1.55; }
 
@@ -170,7 +170,7 @@
   gap: 5px;
 }
 
-/* ===== OPTION BUTTONS ===== */
+
 .opt-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -240,7 +240,7 @@
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
-/* multi-select checkbox visual */
+
 .opt-btn.multi-selected {
   border-color: var(--y);
   background: rgba(255,200,0,.08);
@@ -250,7 +250,6 @@
   color: #000;
 }
 
-/* Text answer */
 .text-answer-wrap { margin-bottom: 28px; }
 .text-answer-wrap .fta {
   font-size: 15px;
@@ -259,7 +258,7 @@
   padding: 14px 16px;
 }
 
-/* ===== QUIZ NAV ===== */
+
 .quiz-nav {
   display: flex;
   align-items: center;
@@ -313,7 +312,7 @@
 .dk .quiz-next-btn.finish { background: var(--y); color: #000; }
 .quiz-next-btn.finish:hover { background: #000; box-shadow: 0 4px 18px rgba(0,0,0,.3); }
 
-/* ===== RESULT SCREEN ===== */
+
 .result-card {
   width: 100%;
   max-width: 560px;
@@ -391,7 +390,6 @@
 }
 .result-retry-btn:hover { border-color: var(--y); }
 
-/* ===== MOBILE ===== */
 @media (max-width: 640px) {
   .quiz-topbar { padding: 0 14px; }
   .quiz-logo-name { display: none; }
@@ -412,7 +410,7 @@
 </head>
 <body>
 <div class="quiz-shell">
-  <!-- TOP BAR -->
+
   <div class="quiz-topbar">
     <div class="quiz-logo-row">
       <img class="quiz-logo-img" id="q-logo" src="" alt="KB">
@@ -427,7 +425,6 @@
     <button class="quiz-exit-btn" onclick="exitQuiz()">✕ Выйти</button>
   </div>
 
-  <!-- CONTENT -->
   <div class="quiz-main" id="quiz-main">
     <div style="text-align:center;color:var(--muted)">Загрузка теста...</div>
   </div>
@@ -440,7 +437,7 @@
 var ME = null;
 var FORM = null;
 var QUESTIONS = [];
-var ANSWERS = []; // array of selected value(s) per question
+var ANSWERS = [];
 var CURRENT_Q = 0;
 var LETTERS = ['A','B','C','D'];
 var FORM_ID = null;
@@ -452,7 +449,7 @@ document.getElementById('favicon').href = KV_LOGO;
 (function(){
   ME = kvRequireAuth(null);
   if (!ME) return;
-  // Get formId from URL
+
   var params = new URLSearchParams(window.location.search);
   FORM_ID = params.get('id');
   if (!FORM_ID) { showError('Тест не найден. Вернитесь на главную.'); return; }
@@ -466,11 +463,11 @@ function loadForm() {
       if (!arr || !arr[0]) { showError('Тест не найден.'); return; }
       FORM = arr[0];
       QUESTIONS = (FORM.questions || []).filter(function(q){
-        // Limit options to 4 max
+  
         if (q.options && q.options.length > 4) q.options = q.options.slice(0,4);
         return true;
       });
-      // Init answers array
+  
       ANSWERS = QUESTIONS.map(function(q){
         return q.type === 'multi' ? [] : null;
       });
@@ -504,7 +501,6 @@ function renderQuestion(qi, goingBack) {
 
   var cardClass = 'quiz-card' + (goingBack ? ' back' : '');
 
-  // Определяем длину текста вопроса, чтобы подобрать размер шрифта
   var qText = q.text || 'Вопрос без текста';
   var qTextClass = '';
   if (qText.length > 220) qTextClass = ' xlong';
@@ -515,12 +511,12 @@ function renderQuestion(qi, goingBack) {
   if (q.type === 'text') {
     bodyHtml += '<div class="text-answer-wrap"><textarea class="fta" id="text-ans" placeholder="Введите ваш ответ..." style="min-height:120px">'+esc(ANSWERS[qi] || '')+'</textarea></div>';
   } else {
-    // single / multi
+ 
     var isMulti = q.type === 'multi';
     var hintText = isMulti ? '&#9745; Выберите все подходящие варианты' : '&#9711; Выберите один вариант';
     bodyHtml += '<div class="qcard-hint">'+hintText+'</div>';
     var opts = (q.options || []).slice(0, 4);
-    // Если хоть один вариант длинный — переключаем сетку в один столбец, чтобы текст не сжимался и не ломал карточки
+    
     var hasLongOpt = opts.some(function(o){ return (o.text||'').length > 60; });
     bodyHtml += '<div class="opt-grid'+(hasLongOpt?' stacked':'')+'">';
     opts.forEach(function(opt, oi) {
@@ -568,7 +564,7 @@ function selectOpt(oi, isMulti) {
     var idx = arr.indexOf(oi);
     if (idx === -1) arr.push(oi); else arr.splice(idx,1);
     ANSWERS[CURRENT_Q] = arr;
-    // Update visual
+
     var opts = document.querySelectorAll('.opt-btn');
     opts.forEach(function(b, i){ b.classList.remove('multi-selected'); });
     arr.forEach(function(sel){
@@ -577,7 +573,7 @@ function selectOpt(oi, isMulti) {
     });
   } else {
     ANSWERS[CURRENT_Q] = oi;
-    // Update visual
+   
     document.querySelectorAll('.opt-btn').forEach(function(b){ b.classList.remove('selected'); });
     var btn = document.getElementById('opt-'+oi);
     if (btn) btn.classList.add('selected');
@@ -611,14 +607,12 @@ function exitQuiz() {
 
 function submitQuiz() {
   collectTextAnswer();
-  // Build answers payload
+ 
   var answers = QUESTIONS.map(function(q, qi) {
     return { value: ANSWERS[qi] };
   });
 
-  // Calculate score for quiz.
-  // Вопросы, где администратор не отметил ни одного правильного варианта,
-  // не учитываются в подсчёте — иначе тест гарантированно даёт 0%.
+  
   var score = null, maxScore = null;
   if (FORM.type === 'quiz') {
     maxScore = 0; score = 0;
@@ -652,7 +646,7 @@ function submitQuiz() {
     max_score: maxScore
   };
 
-  // Show loading
+
   document.querySelector('.quiz-next-btn').textContent = 'Отправка...';
   document.querySelector('.quiz-next-btn').disabled = true;
 
@@ -677,7 +671,7 @@ function showResult(score, maxScore) {
   document.getElementById('q-prog-label').textContent = 'Завершено!';
 
   var isSurvey = FORM.type === 'survey';
-  var notScored = !isSurvey && !maxScore; // ни один вопрос не был размечен правильным ответом
+  var notScored = !isSurvey && !maxScore; 
   var pct = maxScore ? Math.round(score / maxScore * 100) : null;
 
   var icon, titleText, subText;
@@ -695,7 +689,6 @@ function showResult(score, maxScore) {
     subText = 'Ваш результат по тесту «'+esc(FORM.title)+'»';
   }
 
-  // Ring SVG — показываем только если есть реальный посчитанный процент
   var ringColor = (pct >= 70) ? '#2e7d32' : (pct >= 40) ? '#FFC800' : '#d32f2f';
   var circumference = 2 * Math.PI * 52; // r=52
   var offset = circumference - (pct / 100 * circumference);
@@ -737,13 +730,12 @@ function showResult(score, maxScore) {
     '</div>'+
     '</div>';
 
-  // Animate ring
+
   if (!isSurvey && !notScored && maxScore) {
     setTimeout(function(){
       var arc = document.getElementById('ring-arc');
       var txt = document.getElementById('ring-pct-txt');
       if (arc) arc.style.strokeDashoffset = offset.toFixed(1);
-      // Count up number
       var start = 0;
       var dur = 1200;
       var step = 16;
