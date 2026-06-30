@@ -13,7 +13,6 @@
 </head>
 <body>
 
-<!-- ===== ВХОД СОТРУДНИКА (только почта) ===== -->
 <div class="screen on" id="screen-auth">
   <div class="aw">
     <div class="ac">
@@ -46,7 +45,6 @@ document.getElementById('logo-img').src = KV_LOGO;
 document.getElementById('favicon').href = KV_LOGO;
 kvInitTheme();
 
-// Если пользователь уже вошёл — сразу перенаправляем
 (function(){
   var me = kvGetMe();
   if (me) {
