@@ -1,12 +1,7 @@
 
 var SB_URL = 'https://prxmupaitdmjcafucunx.supabase.co';
 
-// !!! ВСТАВЬТЕ СЮДА ВАШ НАСТОЯЩИЙ ANON (public) КЛЮЧ !!!
-// Project Settings → API → Project API keys → "anon" "public"
-// Старый ключ, который тут был раньше, оказался service_role —
-// он давал полный доступ к базе в обход всех ограничений и был
-// виден любому, кто открыл бы исходный код страницы. Замените его
-// и обязательно перевыпустите (Reset) старый service_role ключ в Supabase.
+
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByeG11cGFpdGRtamNhZnVjdW54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NjU2ODgsImV4cCI6MjA5ODI0MTY4OH0.6uIw4Kd5XCSZrOIPB5usaN4kns_2FoHnXQdS-xHSMwI';
 
 var KV_LOGO = 'data:image/png;base64,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';
@@ -258,7 +253,7 @@ grant execute on function kv_admin_delete_user(uuid) to anon, authenticated;
 -- =====================================================
 `;
 
-// ===== ЗАПРОС К SUPABASE =====
+
 function sbFetch(path, opts) {
   opts = opts || {};
   opts.headers = Object.assign({
@@ -270,11 +265,6 @@ function sbFetch(path, opts) {
   return fetch(SB_URL + '/rest/v1/' + path, opts);
 }
 
-// ===== ВЫЗОВ ЗАЩИЩЁННЫХ ФУНКЦИЙ (RPC) =====
-// Используется для входа и управления сотрудниками/админами —
-// эти операции НЕ идут через прямой доступ к таблице kv_users,
-// а только через функции в базе (см. schema.sql), которые
-// никогда не отдают пароль/хэш наружу.
 function sbRpc(fnName, params) {
   return fetch(SB_URL + '/rest/v1/rpc/' + fnName, {
     method: 'POST',
@@ -291,7 +281,6 @@ function sbRpc(fnName, params) {
   });
 }
 
-// ===== ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ (хранится в localStorage между страницами) =====
 function kvGetMe() {
   var stored = localStorage.getItem('kv_me');
   if (!stored) return null;
