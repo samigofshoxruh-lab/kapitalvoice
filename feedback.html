@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>KapitalVoice — Обратная связь</title>
+<link rel="icon" id="favicon" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://prxmupaitdmjcafucunx.supabase.co">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kapitalvoice.css?v=5">
+<style>
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.status-new{background:rgba(100,149,237,.12);color:#3a5bc7;border:1px solid rgba(100,149,237,.3)}
+.status-in_progress{background:rgba(255,160,0,.12);color:#a06000;border:1px solid rgba(255,160,0,.3)}
+.status-resolved{background:rgba(46,125,50,.1);color:var(--ok);border:1px solid rgba(46,125,50,.25)}
+.my-msg-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px}
+.admin-reply{background:var(--card2);border-left:3px solid var(--y);border-radius:var(--radius-xs);padding:10px;margin-top:10px;font-size:13px}
+.tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:2px solid var(--border);padding-bottom:0}
+.tab-btn{padding:8px 16px;font-size:13px;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:"Inter",sans-serif;transition:all .14s}
+.tab-btn.on{color:var(--dark);border-bottom-color:var(--y)}
+
+/* ===== Выбор типа обращения ===== */
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.type-card{border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center;cursor:pointer;background:var(--card2);transition:all .15s}
+.type-card:hover{border-color:var(--border2)}
+.type-card.sel{border-color:var(--y);background:rgba(255,200,0,.08);box-shadow:0 0 0 3px rgba(255,200,0,.15)}
+.type-card .ti{font-size:22px;margin-bottom:6px;display:block}
+.type-card .tn{font-size:13px;font-weight:700;color:var(--text)}
+.type-card .td{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4}
+.msg-type-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-right:6px}
+.msg-type-complaint{background:rgba(211,47,47,.08);color:var(--danger);border:1px solid rgba(211,47,47,.25)}
+.msg-type-suggestion{background:rgba(46,125,50,.08);color:var(--ok);border:1px solid rgba(46,125,50,.25)}
+.msg-type-other{background:rgba(255,200,0,.1);color:var(--yd);border:1px solid rgba(255,200,0,.3)}
+.anon-toggle.disabled{opacity:.5;pointer-events:none}
+.anon-blocked-note{font-size:11px;color:var(--muted);margin:-6px 0 14px;padding:8px 12px;background:var(--card2);border-radius:var(--radius-xs);border-left:3px solid var(--border2)}
+@media(max-width:560px){
+  .type-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+  .type-card{padding:12px 8px}
+  .type-card .ti{font-size:20px;margin-bottom:5px}
+  .type-card .tn{font-size:12px;line-height:1.3}
+  .type-card .td{font-size:9.5px;margin-top:2px;line-height:1.35}
+}
+@media(max-width:360px){
+  .type-grid{grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .type-card{padding:10px 6px}
+  .type-card .ti{font-size:18px}
+  .type-card .tn{font-size:11px}
+  .type-card .td{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <button class="menu-toggle" id="menu-toggle"><span></span><span></span><span></span></button>
+    <div class="hlog">
+      <img class="hli" id="logo-img" src="" alt="KB">
+      <div>
+        <div class="hln">KapitalVoice</div>
+        <div class="hls">Kapital Bank</div>
+      </div>
+    </div>
+    <div class="hr2">
+      <div class="ub" id="u-btn">
+        <div class="rd u"></div>
+        <span id="u-nm"></span>
+        <span class="role-badge user">USER</span>
+      </div>
+      <button class="hb" onclick="togTheme()" title="Тема">&#9788;</button>
+      <button class="hb" onclick="kvLogout('login-employee.html')">&#8594;</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="sb">
+      <div class="sbt">
+        <div class="sblab">Меню</div>
+        <div class="lf">
+          <button class="lb" onclick="window.location.href='forms.html'">
+            <span>&#127968;</span><span class="lb-txt">Главная</span>
+          </button>
+          <button class="lb" onclick="window.location.href='forms.html'">
+            <span>&#128203;</span><span class="lb-txt">Опросы</span>
+          </button>
+          <button class="lb" onclick="window.location.href='forms.html'">
+            <span>&#127942;</span><span class="lb-txt">Тесты</span>
+          </button>
+          <div class="hdiv"></div>
+          <button class="lb on">
+            <span>&#9993;</span><span class="lb-txt">Обращения</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main" id="main-content"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+var ME = null;
+var CURRENT_TAB = 'write';
+
+document.getElementById('logo-img').src = KV_LOGO;
+document.getElementById('favicon').href = KV_LOGO;
+kvInitTheme();
+
+(function(){
+  ME = kvRequireAuth(null);
+  if (!ME) return;
+  document.getElementById('u-nm').textContent = ME.name || ME.email;
+  renderFeedbackPage(document.getElementById('main-content'));
+  kvInitMobileMenu();
+})();
+
+function renderFeedbackPage(mc) {
+  mc.innerHTML =
+    '<div style="max-width:620px">'+
+    '<div class="vtit" style="margin-bottom:14px">Обращения</div>'+
+    '<div class="tabs">'+
+    '<button class="tab-btn on" id="tab-write" onclick="switchTab(\'write\')">&#9998; Написать обращение</button>'+
+    '<button class="tab-btn" id="tab-my" onclick="switchTab(\'my\')">&#128203; Мои обращения</button>'+
+    '</div>'+
+    '<div id="tab-content"></div>'+
+    '</div>';
+  switchTab('write');
+}
+
+function switchTab(tab) {
+  CURRENT_TAB = tab;
+  document.getElementById('tab-write').classList.toggle('on', tab==='write');
+  document.getElementById('tab-my').classList.toggle('on', tab==='my');
+  if (tab === 'write') renderWrite();
+  else renderMyMessages();
+}
+
+var MSG_TYPE = null; // 'complaint' | 'suggestion' | 'other'
+
+function renderWrite() {
+  MSG_TYPE = null;
+  document.getElementById('tab-content').innerHTML =
+    '<label class="fl">Тип обращения</label>'+
+    '<div class="type-grid" id="type-grid">'+
+    '<div class="type-card" data-type="complaint" onclick="selectType(\'complaint\')">'+
+      '<span class="ti">&#9888;</span><div class="tn">Жалоба</div><div class="td">Можно отправить анонимно</div>'+
+    '</div>'+
+    '<div class="type-card" data-type="suggestion" onclick="selectType(\'suggestion\')">'+
+      '<span class="ti">&#128161;</span><div class="tn">Предложение</div><div class="td">Только от своего имени</div>'+
+    '</div>'+
+    '<div class="type-card" data-type="other" onclick="selectType(\'other\')">'+
+      '<span class="ti">&#9993;</span><div class="tn">Своя тема</div><div class="td">Можно отправить анонимно</div>'+
+    '</div>'+
+    '</div>'+
+    '<div id="subject-wrap" style="display:none">'+
+    '<label class="fl">Тема обращения</label>'+
+    '<input class="fi" id="msg-subj" placeholder="Коротко опишите тему">'+
+    '</div>'+
+    '<div id="anon-wrap">'+
+    '<div class="anon-toggle" id="msg-anon" onclick="toggleAnon(this)">'+
+    '<div class="toggle-track"><div class="toggle-thumb"></div></div>'+
+    '<div><div class="toggle-label">Анонимное обращение</div>'+
+    '<div class="toggle-sub">Ваше имя не будет отображаться в тексте обращения</div></div>'+
+    '</div>'+
+    '<div id="msg-anon-status" style="font-size:11px;color:var(--muted);margin-bottom:12px">Режим: <strong>Именной</strong></div>'+
+    '</div>'+
+    '<label class="fl">Текст обращения</label>'+
+    '<textarea class="fta" id="msg-body" placeholder="Подробно опишите вашу мысль, предложение или проблему..." style="min-height:160px;margin-bottom:12px"></textarea>'+
+    '<button class="bny" onclick="sendMessage()" style="max-width:220px;font-size:14px">&#9993; Отправить</button>';
+}
+
+function selectType(type) {
+  MSG_TYPE = type;
+  document.querySelectorAll('.type-card').forEach(function(c){
+    c.classList.toggle('sel', c.dataset.type === type);
+  });
+
+  // Поле "Тема обращения" нужно только для своей темы;
+  // для жалобы/предложения тема подставляется автоматически.
+  var subjWrap = document.getElementById('subject-wrap');
+  subjWrap.style.display = (type === 'other') ? 'block' : 'none';
+
+  // Предложение нельзя отправить анонимно — скрываем переключатель
+  // и принудительно выключаем анонимный режим
+  var anonWrap = document.getElementById('anon-wrap');
+  var anonToggle = document.getElementById('msg-anon');
+  if (type === 'suggestion') {
+    anonToggle.classList.remove('active');
+    var st = document.getElementById('msg-anon-status');
+    if (st) st.innerHTML = 'Режим: <strong>Именной</strong>';
+    anonWrap.innerHTML = '<div class="anon-blocked-note">&#128274; Предложения отправляются только от своего имени — это помогает учитывать и поощрять инициативу сотрудников.</div>';
+  } else {
+    anonWrap.innerHTML =
+      '<div class="anon-toggle" id="msg-anon" onclick="toggleAnon(this)">'+
+      '<div class="toggle-track"><div class="toggle-thumb"></div></div>'+
+      '<div><div class="toggle-label">Анонимное обращение</div>'+
+      '<div class="toggle-sub">Ваше имя не будет отображаться в тексте обращения</div></div>'+
+      '</div>'+
+      '<div id="msg-anon-status" style="font-size:11px;color:var(--muted);margin-bottom:12px">Режим: <strong>Именной</strong></div>';
+  }
+}
+
+function toggleAnon(el) {
+  el.classList.toggle('active');
+  var isAnon = el.classList.contains('active');
+  var st = document.getElementById('msg-anon-status');
+  if (st) st.innerHTML = 'Режим: <strong>'+(isAnon?'Анонимный':'Именной')+'</strong>';
+}
+
+function typeDefaultSubject(type) {
+  if (type === 'complaint') return 'Жалоба';
+  if (type === 'suggestion') return 'Предложение';
+  return '';
+}
+
+function sendMessage() {
+  if (!MSG_TYPE) { toast('Выберите тип обращения', 'err'); return; }
+
+  var body = document.getElementById('msg-body').value.trim();
+  if (!body) { toast('Напишите текст обращения', 'err'); return; }
+
+  var subj;
+  if (MSG_TYPE === 'other') {
+    subj = document.getElementById('msg-subj').value.trim();
+    if (!subj) { toast('Укажите тему обращения', 'err'); return; }
+  } else {
+    subj = typeDefaultSubject(MSG_TYPE);
+  }
+
+  // Анонимность физически запрещена для предложений —
+  // проверяем на уровне отправки, а не только в интерфейсе
+  var anonEl = document.getElementById('msg-anon');
+  var isAnon = (MSG_TYPE !== 'suggestion') && anonEl && anonEl.classList.contains('active');
+
+  var payload = {
+    user_email: ME.email,
+    user_name: ME.name || ME.email,
+    is_anonymous: isAnon,
+    msg_type: MSG_TYPE,
+    subject: subj,
+    body: body,
+    status: 'new'
+  };
+
+  sendMessagePayload(payload, true);
+}
+
+// Отправляет обращение в Supabase. Если колонка msg_type ещё не создана
+// в базе (старая схема без обновления), автоматически повторяет запрос
+// без этого поля, чтобы обращение всё равно дошло, и предупреждает админа.
+function sendMessagePayload(payload, allowRetryWithoutType) {
+  sbFetch('kv_messages', {method:'POST', body:JSON.stringify(payload)})
+    .then(function(r) {
+      if (r.ok) {
+        toast('Обращение отправлено!', 'ok');
+        renderWrite(); // полный сброс формы, включая тип и анонимность
+        return;
+      }
+      // Читаем реальную причину ошибки от Supabase, чтобы не гадать
+      r.json().then(function(errBody) {
+        var msg = (errBody && (errBody.message || errBody.hint || errBody.details)) || '';
+        if (allowRetryWithoutType && /msg_type/i.test(msg)) {
+          // В базе ещё нет колонки msg_type — отправляем без неё,
+          // чтобы обращение не потерялось, и сообщаем причину
+          var fallback = Object.assign({}, payload);
+          delete fallback.msg_type;
+          sendMessagePayload(fallback, false);
+          toast('Тип обращения не сохранён: обновите базу данных (добавьте колонку msg_type)', 'err');
+          return;
+        }
+        toast('Ошибка отправки' + (msg ? ': ' + msg : ''), 'err');
+      }).catch(function() {
+        toast('Ошибка отправки (код ' + r.status + ')', 'err');
+      });
+    }).catch(function(){ toast('Ошибка соединения. Проверьте интернет.', 'err'); });
+}
+
+function statusLabel(s) {
+  if (s === 'in_progress') return '🟡 В работе';
+  if (s === 'resolved') return '🟢 Решено';
+  return '🔵 Новый';
+}
+function statusClass(s) {
+  if (s === 'in_progress') return 'status-in_progress';
+  if (s === 'resolved') return 'status-resolved';
+  return 'status-new';
+}
+
+function msgTypeBadge(t) {
+  if (t === 'complaint') return '<span class="msg-type-badge msg-type-complaint">&#9888; Жалоба</span>';
+  if (t === 'suggestion') return '<span class="msg-type-badge msg-type-suggestion">&#128161; Предложение</span>';
+  return '<span class="msg-type-badge msg-type-other">&#9993; Обращение</span>';
+}
+
+function renderMyMessages() {
+  var tc = document.getElementById('tab-content');
+  tc.innerHTML = '<div class="es"><div class="ei">&#9993;</div><div>Загрузка...</div></div>';
+
+  // Загружаем обращения этого сотрудника
+  sbFetch('kv_messages?user_email=eq.'+encodeURIComponent(ME.email)+'&select=*&order=created_at.desc')
+    .then(function(r){return r.json()})
+    .then(function(msgs){
+      if (!msgs || !msgs.length) {
+        tc.innerHTML = '<div class="es"><div class="ei">&#9993;</div><div>У вас пока нет обращений</div></div>';
+        return;
+      }
+      tc.innerHTML = msgs.map(function(m){
+        var st = m.status || 'new';
+        var anonMark = m.is_anonymous ? ' <span style="font-size:10px;color:var(--muted)">(анонимно)</span>' : '';
+        var commentHtml = '';
+        if (m.admin_comment) {
+          commentHtml = '<div class="admin-reply">'+
+            '<div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px">'+
+            '&#128172; Ответ администратора'+(m.admin_name ? ' — '+esc(m.admin_name) : '')+
+            '</div>'+esc(m.admin_comment)+'</div>';
+        }
+        return '<div class="my-msg-card">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+          '<span class="status-badge '+statusClass(st)+'">'+statusLabel(st)+'</span>'+
+          '<span style="font-size:11px;color:var(--muted)">'+fmtDate(m.created_at)+'</span>'+
+          '</div>'+
+          '<div style="margin-bottom:5px">'+msgTypeBadge(m.msg_type)+(m.subject ? '<span style="font-size:13px;font-weight:700">'+esc(m.subject)+'</span>' : '')+anonMark+'</div>'+
+          '<div style="font-size:13px;color:var(--text);line-height:1.6">'+esc(m.body)+'</div>'+
+          commentHtml+
+          '</div>';
+      }).join('');
+    }).catch(function(){
+      tc.innerHTML = '<div class="es"><div class="ei">&#9888;</div><div>Ошибка загрузки</div></div>';
+    });
+}
+</script>
+</body>
+</html>

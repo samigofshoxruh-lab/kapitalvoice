@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>KapitalVoice — Вход</title>
+<link rel="icon" id="favicon" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://prxmupaitdmjcafucunx.supabase.co">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kapitalvoice.css?v=5">
+</head>
+<body>
+
+<!-- ===== ВХОД СОТРУДНИКА (только почта) ===== -->
+<div class="screen on" id="screen-auth">
+  <div class="aw">
+    <div class="ac">
+      <div class="ah">
+        <img class="ali" id="logo-img" src="" alt="KB">
+        <div>
+          <div class="abn">KapitalVoice</div>
+          <div class="abs">Система обратной связи</div>
+        </div>
+      </div>
+      <div class="abody">
+        <div class="setup-note">Введите корпоративную почту для входа. Пароль не требуется — ваш аккаунт должен быть предварительно добавлен администратором.</div>
+        <label class="fl">Корпоративная почта</label>
+        <input class="fi" id="a-email" type="email" placeholder="your.name@kapitalbank.uz" autocomplete="email">
+        <div class="err" id="a-err"></div>
+        <button class="bny" onclick="doLogin()">&#128274; Войти</button>
+        <div class="admin-link">
+          <a class="tl2" href="login-admin.html">Войти как администратор</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+document.getElementById('logo-img').src = KV_LOGO;
+document.getElementById('favicon').href = KV_LOGO;
+kvInitTheme();
+
+// Если пользователь уже вошёл — сразу перенаправляем
+(function(){
+  var me = kvGetMe();
+  if (me) {
+    window.location.href = me.role === 'admin' ? 'admin.html' : 'forms.html';
+  }
+})();
+
+function doLogin() {
+  var email = document.getElementById('a-email').value.trim().toLowerCase();
+  var err = document.getElementById('a-err');
+  err.textContent = '';
+  if (!email) { err.textContent = 'Введите почту'; return; }
+
+  sbRpc('kv_employee_login', { p_email: email })
+    .then(function(d) {
+      if (!d || !d.length) { err.textContent = 'Такая почта не найдена. Обратитесь к администратору.'; return; }
+      var user = d[0];
+      if (user.role === 'admin') {
+        err.textContent = 'Этот аккаунт — администратор. Используйте вход для администратора.';
+        return;
+      }
+      kvSetMe(user);
+      window.location.href = 'forms.html';
+    })
+    .catch(function() { err.textContent = 'Ошибка соединения с базой данных'; });
+}
+
+document.getElementById('a-email').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

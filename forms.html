@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>KapitalVoice — Опросы и тесты</title>
+<link rel="icon" id="favicon" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://prxmupaitdmjcafucunx.supabase.co">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kapitalvoice.css?v=5">
+<style>
+.done-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(46,125,50,.1);color:var(--ok);border:1.5px solid rgba(46,125,50,.3)}
+.card-done{opacity:.82;pointer-events:none}
+.card-done .cpbtn{background:var(--ok);cursor:default}
+.home-card-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px}
+@media(max-width:480px){
+  .home-card-row{flex-direction:column;align-items:flex-start}
+  .home-card-row .bny{width:100%!important;margin-top:8px}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <button class="menu-toggle" id="menu-toggle"><span></span><span></span><span></span></button>
+    <div class="hlog">
+      <img class="hli" id="logo-img" src="" alt="KB">
+      <div>
+        <div class="hln">KapitalVoice</div>
+        <div class="hls">Kapital Bank</div>
+      </div>
+    </div>
+    <div class="hr2">
+      <div class="ub" id="u-btn">
+        <div class="rd u"></div>
+        <span id="u-nm"></span>
+        <span class="role-badge user">USER</span>
+      </div>
+      <button class="hb" onclick="togTheme()" title="Тема">&#9788;</button>
+      <button class="hb" onclick="kvLogout('login-employee.html')">&#8594;</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="sb">
+      <div class="sbt">
+        <div class="sblab">Меню</div>
+        <div class="lf">
+          <button class="lb on" onclick="showView('home')">
+            <span>&#127968;</span><span class="lb-txt">Главная</span>
+          </button>
+          <button class="lb" onclick="showView('surveys')">
+            <span>&#128203;</span><span class="lb-txt">Опросы</span><span class="bdg" id="sb-sq-cnt">0</span>
+          </button>
+          <button class="lb" onclick="showView('quizzes')">
+            <span>&#127942;</span><span class="lb-txt">Тесты</span><span class="bdg" id="sb-qz-cnt">0</span>
+          </button>
+          <div class="hdiv"></div>
+          <button class="lb" onclick="window.location.href='feedback.html'">
+            <span>&#9993;</span><span class="lb-txt">Написать обращение</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main" id="main-content"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+var ME = null;
+var CURRENT_VIEW = 'home';
+
+document.getElementById('logo-img').src = KV_LOGO;
+document.getElementById('favicon').href = KV_LOGO;
+kvInitTheme();
+kvBindOverlayClose();
+
+(function(){
+  ME = kvRequireAuth(null);
+  if (!ME) return;
+  document.getElementById('u-nm').textContent = ME.name || ME.email;
+  showView('home');
+  kvInitMobileMenu();
+})();
+
+function showView(v) {
+  CURRENT_VIEW = v;
+  document.querySelectorAll('.lb').forEach(function(b){ b.classList.remove('on'); });
+  var btnMap = {'home':0,'surveys':1,'quizzes':2};
+  var lbs = document.querySelectorAll('.lf .lb');
+  if (btnMap[v] !== undefined && lbs[btnMap[v]]) lbs[btnMap[v]].classList.add('on');
+  var mc = document.getElementById('main-content');
+  switch(v) {
+    case 'home': renderHome(mc); break;
+    case 'surveys': renderForms(mc, 'survey'); break;
+    case 'quizzes': renderForms(mc, 'quiz'); break;
+  }
+}
+
+function renderHome(mc) {
+  mc.innerHTML =
+    '<div style="max-width:640px">'+
+    '<div style="margin-bottom:20px">'+
+    '<div style="font-size:22px;font-weight:800;color:var(--dark);margin-bottom:6px">Добро пожаловать в KapitalVoice</div>'+
+    '<div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:14px">Здесь вы можете пройти опросы и тесты, а также отправить обращение руководству.</div>'+
+    '<button class="cpbtn" style="padding:9px 20px;font-size:13px;margin-bottom:8px" onclick="window.location.href=\'feedback.html\'">&#9993; Написать обращение</button>'+
+    '</div>'+
+    '<div class="mon" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">'+
+    '<div class="mc"><div class="mcl">Доступно опросов</div><div class="mcv" id="h-sq">-</div><div class="mcs">Ждут участия</div></div>'+
+    '<div class="mc"><div class="mcl">Доступно тестов</div><div class="mcv" id="h-qz">-</div><div class="mcs">Проверьте знания</div></div>'+
+    '<div class="mc"><div class="mcl">Мои ответы</div><div class="mcv" id="h-my">-</div><div class="mcs">Всего отправлено</div></div>'+
+    '</div>'+
+    '<div id="home-new-section"></div>'+
+    '</div>';
+
+  Promise.all([
+    sbFetch('kv_forms?is_active=eq.true&type=eq.survey&select=*&order=created_at.desc').then(function(r){return r.json()}),
+    sbFetch('kv_forms?is_active=eq.true&type=eq.quiz&select=*&order=created_at.desc').then(function(r){return r.json()}),
+    sbFetch('kv_responses?user_email=eq.'+encodeURIComponent(ME.email)+'&select=form_id').then(function(r){return r.json()})
+  ]).then(function(res){
+    var surveys = res[0] || [];
+    var quizzes = res[1] || [];
+    var done = res[2] || [];
+    var doneIds = done.map(function(x){return x.form_id;});
+
+    document.getElementById('h-sq').textContent = surveys.length;
+    document.getElementById('h-qz').textContent = quizzes.length;
+    setEl('sb-sq-cnt', surveys.length);
+    setEl('sb-qz-cnt', quizzes.length);
+    document.getElementById('h-my').textContent = done.length;
+
+    var newSurveys = surveys.filter(function(f){ return doneIds.indexOf(f.id) === -1; });
+    var newQuizzes = quizzes.filter(function(f){ return doneIds.indexOf(f.id) === -1; });
+    var allNew = newSurveys.map(function(f){ return {f:f, type:'survey'}; })
+                  .concat(newQuizzes.map(function(f){ return {f:f, type:'quiz'}; }));
+    allNew.sort(function(a,b){ return new Date(b.f.created_at)-new Date(a.f.created_at); });
+
+    var sec = document.getElementById('home-new-section');
+    if (!sec) return;
+
+    if (!allNew.length) {
+      sec.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:14px">&#10003; Вы прошли все доступные опросы и тесты</div>';
+      return;
+    }
+
+    var html = '<div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:12px">&#128276; Новые для вас</div>';
+    html += '<div class="cg" style="grid-template-columns:1fr">';
+    allNew.forEach(function(item){
+      var f = item.f;
+      var type = item.type;
+      var isSurvey = type === 'survey';
+      var qCount = (f.questions||[]).length;
+      html +=
+        '<div class="card home-card-row">'+
+        '<div style="min-width:0">'+
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+
+        '<span class="lt '+(isSurvey?'lt-s':'lt-q')+'">'+(isSurvey?'&#128203; Опрос':'&#127942; Тест')+'</span>'+
+        '<span style="font-size:11px;color:var(--muted)">&#10067; '+qCount+' вопр.</span>'+
+        '</div>'+
+        '<div style="font-size:14px;font-weight:700;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(f.title)+'</div>'+
+        (f.description ? '<div style="font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(f.description)+'</div>' : '')+
+        '</div>'+
+        '<button class="bny home-start-btn" data-fid="'+f.id+'" style="width:auto;padding:9px 20px;font-size:13px;white-space:nowrap;flex-shrink:0">Начать &#8594;</button>'+
+        '</div>';
+    });
+    html += '</div>';
+    sec.innerHTML = html;
+
+    sec.addEventListener('click', function(e){
+      var btn = e.target.closest('.home-start-btn');
+      if (btn) goTakeForm(btn.dataset.fid);
+    });
+
+  }).catch(function(){
+    document.getElementById('h-sq').textContent = '?';
+    document.getElementById('h-qz').textContent = '?';
+  });
+}
+
+function renderForms(mc, type) {
+  var label = type === 'survey' ? 'Опросы' : 'Тесты';
+  mc.innerHTML = '<div class="ctrl" style="margin-bottom:14px"><div class="vtit">'+label+'</div></div><div class="cg" id="forms-grid"><div class="es"><div class="ei">&#128203;</div><div>Загрузка...</div></div></div>';
+
+  Promise.all([
+    sbFetch('kv_forms?is_active=eq.true&type=eq.'+type+'&select=*&order=created_at.desc').then(function(r){return r.json()}),
+    sbFetch('kv_responses?user_email=eq.'+encodeURIComponent(ME.email)+'&select=form_id').then(function(r){return r.json()})
+  ]).then(function(results){
+    var forms = results[0] || [];
+    var done = results[1] || [];
+    var g = document.getElementById('forms-grid');
+    if (!g) return;
+    if (!forms.length) { g.innerHTML='<div class="es"><div class="ei">&#128203;</div><div>Нет доступных '+(type==='survey'?'опросов':'тестов')+'</div></div>'; return; }
+
+    var doneIds = done.map(function(x){return x.form_id;});
+
+    g.innerHTML = forms.map(function(f){
+      var isDone = doneIds.indexOf(f.id) !== -1;
+      var q = (f.questions||[]).length;
+      var cardClass = isDone ? 'card card-done' : 'card';
+      var btnHtml = isDone
+        ? '<span class="done-badge">&#10003; Пройдено</span>'
+        : '<button class="cpbtn" data-fid="'+f.id+'">Начать</button>';
+      return '<div class="'+cardClass+'">'+
+        '<span class="lt '+(type==='survey'?'lt-s':'lt-q')+'">'+(type==='survey'?'&#128203; Опрос':'&#127942; Тест')+'</span>'+
+        '<div class="ctt">'+esc(f.title)+'</div>'+
+        '<div class="cpr">'+esc(f.description||'')+'</div>'+
+        '<div class="cmeta"><span class="cpcnt">&#10067; '+q+' вопр.</span>'+(f.created_at?'<span class="cdt">'+fmtDate(f.created_at)+'</span>':'')+'<div style="margin-left:auto">'+btnHtml+'</div></div>'+
+        '</div>';
+    }).join('');
+
+    g.addEventListener('click', function(e){
+      var btn = e.target.closest('.cpbtn');
+      if (btn && btn.dataset.fid) goTakeForm(btn.dataset.fid);
+    });
+  }).catch(function(){
+    var g = document.getElementById('forms-grid');
+    if (g) g.innerHTML='<div class="es"><div class="ei">&#9888;</div><div>Ошибка загрузки</div></div>';
+  });
+}
+
+function goTakeForm(formId) {
+  window.location.href = 'quiz-take.html?id=' + encodeURIComponent(formId);
+}
+</script>
+</body>
+</html>

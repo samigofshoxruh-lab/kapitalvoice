@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>KapitalVoice — Тест</title>
+<link rel="icon" id="favicon" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://prxmupaitdmjcafucunx.supabase.co">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kapitalvoice.css?v=5">
+<style>
+/* ===== QUIZ TAKE PAGE ===== */
+.quiz-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+.quiz-topbar {
+  background: var(--card);
+  border-bottom: 3px solid var(--y);
+  padding: 0 24px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 10px rgba(0,0,0,.07);
+}
+.dk .quiz-topbar { background: #1a1a1a; }
+.quiz-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.quiz-logo-img { width: 32px; height: 32px; object-fit: contain; border-radius: 4px; }
+.quiz-logo-name { font-size: 15px; font-weight: 800; color: var(--dark); }
+.dk .quiz-logo-name { color: #fff; }
+.quiz-progress-wrap {
+  flex: 1;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.quiz-progress-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: .3px;
+}
+.quiz-progress-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.quiz-progress-fill {
+  height: 100%;
+  background: var(--y);
+  border-radius: 3px;
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+.quiz-exit-btn {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all .14s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.quiz-exit-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ===== MAIN QUIZ AREA ===== */
+.quiz-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px 40px;
+}
+.quiz-card {
+  width: 100%;
+  max-width: 680px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.1);
+  overflow: hidden;
+  animation: slideQ .35s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideQ {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideQBack {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.quiz-card.back { animation: slideQBack .35s cubic-bezier(.4,0,.2,1); }
+
+.qcard-head {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  padding: 28px 32px 24px;
+  position: relative;
+  overflow: hidden;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.qcard-head::-webkit-scrollbar { width: 5px; }
+.qcard-head::-webkit-scrollbar-thumb { background: rgba(255,200,0,.3); border-radius: 3px; }
+.qcard-head::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--y);
+}
+.qcard-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,200,0,.7);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.qcard-num-dot {
+  width: 6px; height: 6px;
+  background: var(--y);
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.qcard-text {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.4;
+  max-width: 560px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+/* Если текст вопроса очень длинный — уменьшаем шрифт автоматически */
+.qcard-text.long { font-size: 17px; }
+.qcard-text.xlong { font-size: 14px; line-height: 1.55; }
+
+.qcard-body { padding: 28px 32px 32px; }
+.qcard-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ===== OPTION BUTTONS ===== */
+.opt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.opt-grid.stacked { grid-template-columns: 1fr; }
+.opt-btn {
+  position: relative;
+  padding: 16px 18px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--card2);
+  cursor: pointer;
+  transition: all .18s;
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 64px;
+  max-height: 220px;
+  overflow-y: auto;
+  outline: none;
+}
+.opt-btn::-webkit-scrollbar { width: 4px; }
+.opt-btn::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.opt-btn:hover {
+  border-color: var(--y);
+  background: rgba(255,200,0,.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255,200,0,.15);
+}
+.opt-btn.selected {
+  border-color: var(--y);
+  background: rgba(255,200,0,.1);
+  box-shadow: 0 0 0 3px rgba(255,200,0,.2);
+}
+.opt-letter {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .18s;
+  font-family: "IBM Plex Mono", monospace;
+  position: sticky;
+  top: 0;
+}
+.opt-btn.selected .opt-letter {
+  background: var(--y);
+  color: #000;
+}
+.opt-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.45;
+  padding-top: 4px;
+  flex: 1;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+/* multi-select checkbox visual */
+.opt-btn.multi-selected {
+  border-color: var(--y);
+  background: rgba(255,200,0,.08);
+}
+.opt-btn.multi-selected .opt-letter {
+  background: var(--y);
+  color: #000;
+}
+
+/* Text answer */
+.text-answer-wrap { margin-bottom: 28px; }
+.text-answer-wrap .fta {
+  font-size: 15px;
+  min-height: 120px;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+/* ===== QUIZ NAV ===== */
+.quiz-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.quiz-back-btn {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 11px 22px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all .18s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.quiz-back-btn:hover { border-color: var(--text); color: var(--text); }
+.quiz-back-btn:disabled { opacity: .35; pointer-events: none; }
+.quiz-next-btn {
+  background: var(--y);
+  color: #000;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 32px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all .18s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.quiz-next-btn:hover {
+  background: var(--y2);
+  box-shadow: 0 4px 18px rgba(255,200,0,.45);
+  transform: translateY(-1px);
+}
+.quiz-next-btn.finish { background: #1a1a1a; color: #fff; }
+.dk .quiz-next-btn.finish { background: var(--y); color: #000; }
+.quiz-next-btn.finish:hover { background: #000; box-shadow: 0 4px 18px rgba(0,0,0,.3); }
+
+/* ===== RESULT SCREEN ===== */
+.result-card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.1);
+  text-align: center;
+  padding: 48px 40px;
+  animation: fadeUp .4s ease;
+}
+@keyframes fadeUp { from { opacity:0; transform: translateY(24px); } to { opacity:1; transform: translateY(0); } }
+.result-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+.result-title { font-size: 26px; font-weight: 800; color: var(--dark); margin-bottom: 6px; }
+.dk .result-title { color: #fff; }
+.result-sub { font-size: 15px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+.result-score-ring {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 24px;
+  position: relative;
+}
+.result-score-ring svg { transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--border); stroke-width: 10; }
+.ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1); }
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.ring-pct { font-size: 30px; font-weight: 800; color: var(--dark); line-height: 1; }
+.dk .ring-pct { color: #fff; }
+.ring-label { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.result-details { display: flex; gap: 12px; justify-content: center; margin-bottom: 28px; flex-wrap: wrap; }
+.result-detail-chip {
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1.5px solid;
+}
+.chip-ok { color: var(--ok); border-color: rgba(46,125,50,.3); background: rgba(46,125,50,.07); }
+.chip-err { color: var(--danger); border-color: rgba(211,47,47,.25); background: rgba(211,47,47,.05); }
+.chip-tot { color: var(--muted); border-color: var(--border); background: var(--card2); }
+.result-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.result-home-btn {
+  background: var(--y);
+  color: #000;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all .18s;
+}
+.result-home-btn:hover { background: var(--y2); transform: translateY(-1px); }
+.result-retry-btn {
+  background: var(--card2);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all .18s;
+}
+.result-retry-btn:hover { border-color: var(--y); }
+
+/* ===== MOBILE ===== */
+@media (max-width: 640px) {
+  .quiz-topbar { padding: 0 14px; }
+  .quiz-logo-name { display: none; }
+  .quiz-progress-wrap { max-width: 160px; }
+  .qcard-head { padding: 22px 20px 20px; }
+  .qcard-text { font-size: 17px; }
+  .qcard-body { padding: 20px 20px 24px; }
+  .opt-grid { grid-template-columns: 1fr; gap: 10px; }
+  .opt-btn { padding: 14px 16px; min-height: 56px; }
+  .result-card { padding: 36px 22px; }
+  .result-title { font-size: 20px; }
+}
+@media (max-width: 400px) {
+  .qcard-text { font-size: 15px; }
+  .opt-text { font-size: 13px; }
+}
+</style>
+</head>
+<body>
+<div class="quiz-shell">
+  <!-- TOP BAR -->
+  <div class="quiz-topbar">
+    <div class="quiz-logo-row">
+      <img class="quiz-logo-img" id="q-logo" src="" alt="KB">
+      <span class="quiz-logo-name">KapitalVoice</span>
+    </div>
+    <div class="quiz-progress-wrap" id="q-prog-wrap" style="display:none">
+      <div class="quiz-progress-label" id="q-prog-label">Вопрос 1 из 5</div>
+      <div class="quiz-progress-track">
+        <div class="quiz-progress-fill" id="q-prog-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <button class="quiz-exit-btn" onclick="exitQuiz()">✕ Выйти</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="quiz-main" id="quiz-main">
+    <div style="text-align:center;color:var(--muted)">Загрузка теста...</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+var ME = null;
+var FORM = null;
+var QUESTIONS = [];
+var ANSWERS = []; // array of selected value(s) per question
+var CURRENT_Q = 0;
+var LETTERS = ['A','B','C','D'];
+var FORM_ID = null;
+
+kvInitTheme();
+document.getElementById('q-logo').src = KV_LOGO;
+document.getElementById('favicon').href = KV_LOGO;
+
+(function(){
+  ME = kvRequireAuth(null);
+  if (!ME) return;
+  // Get formId from URL
+  var params = new URLSearchParams(window.location.search);
+  FORM_ID = params.get('id');
+  if (!FORM_ID) { showError('Тест не найден. Вернитесь на главную.'); return; }
+  loadForm();
+})();
+
+function loadForm() {
+  sbFetch('kv_forms?id=eq.'+FORM_ID+'&select=*')
+    .then(function(r){ return r.json(); })
+    .then(function(arr){
+      if (!arr || !arr[0]) { showError('Тест не найден.'); return; }
+      FORM = arr[0];
+      QUESTIONS = (FORM.questions || []).filter(function(q){
+        // Limit options to 4 max
+        if (q.options && q.options.length > 4) q.options = q.options.slice(0,4);
+        return true;
+      });
+      // Init answers array
+      ANSWERS = QUESTIONS.map(function(q){
+        return q.type === 'multi' ? [] : null;
+      });
+      document.title = 'KapitalVoice — ' + FORM.title;
+      document.getElementById('q-prog-wrap').style.display = 'flex';
+      renderQuestion(0, false);
+    }).catch(function(){ showError('Ошибка загрузки теста. Проверьте соединение.'); });
+}
+
+function showError(msg) {
+  document.getElementById('quiz-main').innerHTML =
+    '<div style="text-align:center;max-width:400px"><div style="font-size:40px;margin-bottom:16px">⚠️</div>'+
+    '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:10px">Ошибка</div>'+
+    '<div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px">'+msg+'</div>'+
+    '<button class="bny" style="max-width:200px" onclick="window.location.href=\'forms.html\'">На главную</button></div>';
+}
+
+function updateProgress(qi) {
+  var total = QUESTIONS.length;
+  var pct = Math.round(((qi) / total) * 100);
+  document.getElementById('q-prog-fill').style.width = pct + '%';
+  document.getElementById('q-prog-label').textContent = 'Вопрос ' + (qi+1) + ' из ' + total;
+}
+
+function renderQuestion(qi, goingBack) {
+  CURRENT_Q = qi;
+  updateProgress(qi);
+  var q = QUESTIONS[qi];
+  var isLast = qi === QUESTIONS.length - 1;
+  var isSurvey = FORM.type === 'survey';
+
+  var cardClass = 'quiz-card' + (goingBack ? ' back' : '');
+
+  // Определяем длину текста вопроса, чтобы подобрать размер шрифта
+  var qText = q.text || 'Вопрос без текста';
+  var qTextClass = '';
+  if (qText.length > 220) qTextClass = ' xlong';
+  else if (qText.length > 110) qTextClass = ' long';
+
+  var bodyHtml = '';
+
+  if (q.type === 'text') {
+    bodyHtml += '<div class="text-answer-wrap"><textarea class="fta" id="text-ans" placeholder="Введите ваш ответ..." style="min-height:120px">'+esc(ANSWERS[qi] || '')+'</textarea></div>';
+  } else {
+    // single / multi
+    var isMulti = q.type === 'multi';
+    var hintText = isMulti ? '&#9745; Выберите все подходящие варианты' : '&#9711; Выберите один вариант';
+    bodyHtml += '<div class="qcard-hint">'+hintText+'</div>';
+    var opts = (q.options || []).slice(0, 4);
+    // Если хоть один вариант длинный — переключаем сетку в один столбец, чтобы текст не сжимался и не ломал карточки
+    var hasLongOpt = opts.some(function(o){ return (o.text||'').length > 60; });
+    bodyHtml += '<div class="opt-grid'+(hasLongOpt?' stacked':'')+'">';
+    opts.forEach(function(opt, oi) {
+      var letter = LETTERS[oi];
+      var isSelected = isMulti
+        ? (ANSWERS[qi] || []).indexOf(oi) !== -1
+        : ANSWERS[qi] === oi;
+      var selClass = isSelected ? (isMulti ? ' multi-selected' : ' selected') : '';
+      bodyHtml +=
+        '<button class="opt-btn'+selClass+'" onclick="selectOpt('+oi+','+isMulti+')" id="opt-'+oi+'">'+
+        '<span class="opt-letter">'+letter+'</span>'+
+        '<span class="opt-text">'+esc(opt.text || ('Вариант '+letter))+'</span>'+
+        '</button>';
+    });
+    bodyHtml += '</div>';
+  }
+
+  var navHtml =
+    '<div class="quiz-nav">'+
+    '<button class="quiz-back-btn" onclick="goBack()"'+(qi===0?' disabled':'')+'>&#8592; Назад</button>'+
+    (isLast
+      ? '<button class="quiz-next-btn finish" onclick="submitQuiz()">Завершить &#10003;</button>'
+      : '<button class="quiz-next-btn" onclick="goNext()">Далее &#8594;</button>'
+    )+
+    '</div>';
+
+  var html =
+    '<div class="'+cardClass+'">'+
+    '<div class="qcard-head">'+
+    '<div class="qcard-num"><span class="qcard-num-dot"></span>Вопрос '+(qi+1)+' из '+QUESTIONS.length+(isSurvey?' · Опрос':' · Тест')+'</div>'+
+    '<div class="qcard-text'+qTextClass+'">'+esc(qText)+'</div>'+
+    '</div>'+
+    '<div class="qcard-body">'+
+    bodyHtml+
+    navHtml+
+    '</div>'+
+    '</div>';
+
+  document.getElementById('quiz-main').innerHTML = html;
+}
+
+function selectOpt(oi, isMulti) {
+  if (isMulti) {
+    var arr = ANSWERS[CURRENT_Q] || [];
+    var idx = arr.indexOf(oi);
+    if (idx === -1) arr.push(oi); else arr.splice(idx,1);
+    ANSWERS[CURRENT_Q] = arr;
+    // Update visual
+    var opts = document.querySelectorAll('.opt-btn');
+    opts.forEach(function(b, i){ b.classList.remove('multi-selected'); });
+    arr.forEach(function(sel){
+      var b = document.getElementById('opt-'+sel);
+      if (b) b.classList.add('multi-selected');
+    });
+  } else {
+    ANSWERS[CURRENT_Q] = oi;
+    // Update visual
+    document.querySelectorAll('.opt-btn').forEach(function(b){ b.classList.remove('selected'); });
+    var btn = document.getElementById('opt-'+oi);
+    if (btn) btn.classList.add('selected');
+  }
+}
+
+function collectTextAnswer() {
+  var ta = document.getElementById('text-ans');
+  if (ta) ANSWERS[CURRENT_Q] = ta.value.trim();
+}
+
+function goNext() {
+  collectTextAnswer();
+  if (CURRENT_Q < QUESTIONS.length - 1) {
+    renderQuestion(CURRENT_Q + 1, false);
+  }
+}
+
+function goBack() {
+  collectTextAnswer();
+  if (CURRENT_Q > 0) {
+    renderQuestion(CURRENT_Q - 1, true);
+  }
+}
+
+function exitQuiz() {
+  if (confirm('Выйти из теста? Ваши ответы не будут сохранены.')) {
+    window.location.href = 'forms.html';
+  }
+}
+
+function submitQuiz() {
+  collectTextAnswer();
+  // Build answers payload
+  var answers = QUESTIONS.map(function(q, qi) {
+    return { value: ANSWERS[qi] };
+  });
+
+  // Calculate score for quiz.
+  // Вопросы, где администратор не отметил ни одного правильного варианта,
+  // не учитываются в подсчёте — иначе тест гарантированно даёт 0%.
+  var score = null, maxScore = null;
+  if (FORM.type === 'quiz') {
+    maxScore = 0; score = 0;
+    QUESTIONS.forEach(function(q, qi) {
+      if (q.type === 'single' && q.options) {
+        var correctIdx = -1;
+        q.options.forEach(function(o, i){ if (o.correct) correctIdx = i; });
+        if (correctIdx === -1) return; // не размечен — пропускаем вопрос
+        maxScore++;
+        if (answers[qi].value === correctIdx) score++;
+      } else if (q.type === 'multi' && q.options) {
+        var correctSet = [];
+        q.options.forEach(function(o, i){ if (o.correct) correctSet.push(i); });
+        if (correctSet.length === 0) return; // не размечен — пропускаем вопрос
+        maxScore++;
+        var userAns = answers[qi].value || [];
+        var isCorrect = correctSet.length === userAns.length &&
+          correctSet.every(function(x){ return userAns.indexOf(x) !== -1; });
+        if (isCorrect) score++;
+      }
+    });
+  }
+
+  var payload = {
+    form_id: FORM.id,
+    user_email: ME.email,
+    user_name: ME.name || ME.email,
+    is_anonymous: false,
+    answers: answers,
+    score: score,
+    max_score: maxScore
+  };
+
+  // Show loading
+  document.querySelector('.quiz-next-btn').textContent = 'Отправка...';
+  document.querySelector('.quiz-next-btn').disabled = true;
+
+  sbFetch('kv_responses', {method:'POST', body:JSON.stringify(payload)})
+    .then(function(r){
+      if (r.ok) {
+        showResult(score, maxScore);
+      } else {
+        toast('Ошибка отправки. Попробуйте снова.', 'err');
+        document.querySelector('.quiz-next-btn').textContent = 'Завершить ✓';
+        document.querySelector('.quiz-next-btn').disabled = false;
+      }
+    }).catch(function(){
+      toast('Ошибка соединения.', 'err');
+      document.querySelector('.quiz-next-btn').textContent = 'Завершить ✓';
+      document.querySelector('.quiz-next-btn').disabled = false;
+    });
+}
+
+function showResult(score, maxScore) {
+  document.getElementById('q-prog-fill').style.width = '100%';
+  document.getElementById('q-prog-label').textContent = 'Завершено!';
+
+  var isSurvey = FORM.type === 'survey';
+  var notScored = !isSurvey && !maxScore; // ни один вопрос не был размечен правильным ответом
+  var pct = maxScore ? Math.round(score / maxScore * 100) : null;
+
+  var icon, titleText, subText;
+  if (isSurvey) {
+    icon = '🎉';
+    titleText = 'Спасибо за участие!';
+    subText = 'Ваш ответ успешно отправлен.';
+  } else if (notScored) {
+    icon = '✅';
+    titleText = 'Ответ принят!';
+    subText = 'Ваш ответ по тесту «'+esc(FORM.title)+'» отправлен. Подсчёт баллов для этого теста не настроен администратором.';
+  } else {
+    icon = pct >= 70 ? '🏆' : pct >= 40 ? '👍' : '📚';
+    titleText = pct >= 70 ? 'Отличный результат!' : pct >= 40 ? 'Неплохой результат!' : 'Попробуйте ещё раз!';
+    subText = 'Ваш результат по тесту «'+esc(FORM.title)+'»';
+  }
+
+  // Ring SVG — показываем только если есть реальный посчитанный процент
+  var ringColor = (pct >= 70) ? '#2e7d32' : (pct >= 40) ? '#FFC800' : '#d32f2f';
+  var circumference = 2 * Math.PI * 52; // r=52
+  var offset = circumference - (pct / 100 * circumference);
+
+  var ringSvg = (isSurvey || notScored) ? '' :
+    '<div class="result-score-ring">'+
+    '<svg viewBox="0 0 120 120" width="140" height="140">'+
+    '<circle class="ring-bg" cx="60" cy="60" r="52"/>'+
+    '<circle class="ring-fill" cx="60" cy="60" r="52" stroke="'+ringColor+'" '+
+      'stroke-dasharray="'+circumference.toFixed(1)+'" '+
+      'stroke-dashoffset="'+circumference.toFixed(1)+'" '+
+      'id="ring-arc"/>'+
+    '</svg>'+
+    '<div class="ring-text">'+
+    '<div class="ring-pct" id="ring-pct-txt">0%</div>'+
+    '<div class="ring-label">результат</div>'+
+    '</div>'+
+    '</div>';
+
+  var detailsHtml = '';
+  if (!isSurvey && !notScored && maxScore) {
+    detailsHtml =
+      '<div class="result-details">'+
+      '<div class="result-detail-chip chip-ok">✓ Верно: '+score+'</div>'+
+      '<div class="result-detail-chip chip-err">✗ Неверно: '+(maxScore-score)+'</div>'+
+      '<div class="result-detail-chip chip-tot">Всего: '+maxScore+'</div>'+
+      '</div>';
+  }
+
+  document.getElementById('quiz-main').innerHTML =
+    '<div class="result-card">'+
+    '<div class="result-icon">'+icon+'</div>'+
+    ringSvg+
+    '<div class="result-title">'+titleText+'</div>'+
+    '<div class="result-sub">'+subText+'</div>'+
+    detailsHtml+
+    '<div class="result-actions">'+
+    '<button class="result-home-btn" onclick="window.location.href=\'forms.html\'">&#127968; На главную</button>'+
+    '</div>'+
+    '</div>';
+
+  // Animate ring
+  if (!isSurvey && !notScored && maxScore) {
+    setTimeout(function(){
+      var arc = document.getElementById('ring-arc');
+      var txt = document.getElementById('ring-pct-txt');
+      if (arc) arc.style.strokeDashoffset = offset.toFixed(1);
+      // Count up number
+      var start = 0;
+      var dur = 1200;
+      var step = 16;
+      var inc = pct / (dur / step);
+      var cur = 0;
+      var timer = setInterval(function(){
+        cur = Math.min(cur + inc, pct);
+        if (txt) txt.textContent = Math.round(cur) + '%';
+        if (cur >= pct) clearInterval(timer);
+      }, step);
+    }, 200);
+  }
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>KapitalVoice — Админ-панель</title>
+<link rel="icon" id="favicon" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://prxmupaitdmjcafucunx.supabase.co">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kapitalvoice.css?v=5">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.status-new{background:rgba(100,149,237,.12);color:#3a5bc7;border:1px solid rgba(100,149,237,.3)}
+.status-in_progress{background:rgba(255,160,0,.12);color:#a06000;border:1px solid rgba(255,160,0,.3)}
+.status-resolved{background:rgba(46,125,50,.1);color:var(--ok);border:1px solid rgba(46,125,50,.25)}
+.spy-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(150,0,255,.08);color:#7b00d4;border:1px solid rgba(150,0,255,.2);vertical-align:middle;margin-left:4px}
+
+.msg-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px}
+.msg-comment-box{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--radius-xs);padding:10px;margin-top:10px;font-size:12px}
+/* Кнопка "Ответить" — справа в строке действий */
+.msg-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.msg-type-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-right:6px}
+.msg-type-complaint{background:rgba(211,47,47,.08);color:var(--danger);border:1px solid rgba(211,47,47,.25)}
+.msg-type-suggestion{background:rgba(46,125,50,.08);color:var(--ok);border:1px solid rgba(46,125,50,.25)}
+.msg-type-other{background:rgba(255,200,0,.1);color:var(--yd);border:1px solid rgba(255,200,0,.3)}
+
+/* ===== ДАШБОРД ===== */
+.new-msg-banner{
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(135deg,rgba(255,200,0,.16),rgba(255,200,0,.06));
+  border:1.5px solid rgba(255,200,0,.45);
+  border-radius:var(--radius-sm);
+  padding:14px 16px;margin-bottom:16px;
+  cursor:pointer;transition:all .15s;
+}
+.new-msg-banner:hover{border-color:var(--y);box-shadow:0 4px 16px rgba(255,200,0,.18);transform:translateY(-1px)}
+.new-msg-banner .nb-icon{
+  width:38px;height:38px;border-radius:50%;background:var(--y);color:#000;
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+  animation:nbPulse 2s ease-in-out infinite;
+}
+@keyframes nbPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,200,0,.5)}50%{box-shadow:0 0 0 8px rgba(255,200,0,0)}}
+.new-msg-banner .nb-text{flex:1;min-width:0}
+.new-msg-banner .nb-title{font-size:14px;font-weight:700;color:var(--dark)}
+.dk .new-msg-banner .nb-title{color:#fff}
+.new-msg-banner .nb-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.new-msg-banner .nb-arrow{font-size:18px;color:var(--yd);flex-shrink:0}
+
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+@media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
+
+.dash-panel{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.dash-panel-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+
+.progress-row{margin-bottom:14px}
+.progress-row:last-child{margin-bottom:0}
+.progress-row-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.progress-row-label{font-size:13px;font-weight:600;color:var(--text)}
+.progress-row-val{font-size:12px;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+.progress-track{height:8px;background:var(--card2);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+.progress-fill{height:100%;border-radius:4px;background:var(--y);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.progress-fill.green{background:var(--ok)}
+
+.recent-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.recent-item:last-child{border-bottom:none;padding-bottom:0}
+.recent-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:var(--card2)}
+.recent-body{flex:1;min-width:0}
+.recent-title{font-size:12.5px;color:var(--text);line-height:1.4}
+.recent-title strong{font-weight:700}
+.recent-time{font-size:10.5px;color:var(--muted);margin-top:2px}
+
+.empty-dash{text-align:center;padding:30px 10px;color:var(--muted);font-size:13px}
+
+.dash-mini-stat{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.dash-mini-stat:last-child{border-bottom:none}
+.dms-label{font-size:12.5px;color:var(--muted)}
+.dms-val{font-size:14px;font-weight:700;color:var(--text);font-family:"IBM Plex Mono",monospace}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <button class="menu-toggle" id="menu-toggle"><span></span><span></span><span></span></button>
+    <div class="hlog">
+      <img class="hli" id="logo-img" src="" alt="KB">
+      <div>
+        <div class="hln">KapitalVoice</div>
+        <div class="hls">Kapital Bank</div>
+      </div>
+    </div>
+    <div class="hr2">
+      <div class="ub" id="u-btn">
+        <div class="rd ra"></div>
+        <span id="u-nm"></span>
+        <span class="role-badge admin">ADMIN</span>
+      </div>
+      <button class="hb" onclick="togTheme()" title="Тема">&#9788;</button>
+      <button class="hb" onclick="kvLogout('login-admin.html')">&#8594;</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="sb">
+      <div class="sbt">
+        <div class="sblab">Администратор</div>
+        <div class="lf">
+          <button class="lb on" onclick="showView('adm-dashboard')">
+            <span>&#128202;</span><span class="lb-txt">Дашборд</span>
+          </button>
+          <button class="lb" onclick="showView('adm-messages')">
+            <span>&#9993;</span><span class="lb-txt">Обращения</span><span class="bdg" id="sb-msg-cnt">0</span>
+          </button>
+          <button class="lb" onclick="showView('adm-surveys')">
+            <span>&#128203;</span><span class="lb-txt">Опросы</span>
+          </button>
+          <button class="lb" onclick="showView('adm-quizzes')">
+            <span>&#127942;</span><span class="lb-txt">Тесты</span>
+          </button>
+          <button class="lb" onclick="showView('adm-users')">
+            <span>&#128101;</span><span class="lb-txt">Сотрудники</span>
+          </button>
+          <div class="hdiv"></div>
+          <button class="lb" onclick="window.location.href='forms.html'">
+            <span>&#128100;</span><span class="lb-txt">Как сотрудник</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main" id="main-content"></div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="ov-create">
+  <div class="modal" id="modal-create" style="max-width:700px">
+    <div class="mh">
+      <div class="mh-t" id="create-title">Создать опрос</div>
+      <button class="close-btn" onclick="closeModal('ov-create')">✕</button>
+    </div>
+    <div class="mb" id="create-body"></div>
+    <div class="mf">
+      <button class="bng" onclick="closeModal('ov-create')">Отмена</button>
+      <button class="bnok" onclick="saveForm()">&#10003; Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-results">
+  <div class="modal" style="max-width:720px">
+    <div class="mh">
+      <div class="mh-t" id="res-title">Результаты</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="bng bsm" id="res-export-btn" onclick="exportResultsExcel()" style="display:none">&#128190; Excel</button>
+        <button class="close-btn" onclick="closeModal('ov-results')">✕</button>
+      </div>
+    </div>
+    <div class="mb" id="res-body"></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-user">
+  <div class="modal">
+    <div class="mh">
+      <div class="mh-t">Добавить пользователя</div>
+      <button class="close-btn" onclick="closeModal('ov-user')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="tabs" id="nu-type-tabs">
+        <button type="button" class="tab on" id="nu-tab-user" onclick="switchUserType('user')">Сотрудник</button>
+        <button type="button" class="tab" id="nu-tab-admin" onclick="switchUserType('admin')">Администратор</button>
+      </div>
+      <div id="nu-fields-user">
+        <div class="setup-note">Пароль не нужен — сотрудник входит, указав только эту почту.</div>
+        <label class="fl">Корпоративная почта</label>
+        <input class="fi" id="nu-email" type="email" placeholder="employee@kapitalbank.uz">
+        <label class="fl">Имя сотрудника</label>
+        <input class="fi" id="nu-name" placeholder="Иван Иванов" style="margin-bottom:0">
+      </div>
+      <div id="nu-fields-admin" style="display:none">
+        <div class="setup-note">Администратор входит по логину и паролю (не по почте).</div>
+        <label class="fl">Логин</label>
+        <input class="fi" id="nu-login" type="text" placeholder="admin2">
+        <label class="fl">Пароль</label>
+        <input class="fi" id="nu-adm-pass" type="password" placeholder="минимум 6 символов">
+        <label class="fl">Имя администратора</label>
+        <input class="fi" id="nu-adm-name" placeholder="Иван Иванов" style="margin-bottom:0">
+      </div>
+      <div class="err" id="nu-err"></div>
+    </div>
+    <div class="mf">
+      <button class="bng" onclick="closeModal('ov-user')">Отмена</button>
+      <button class="bnok" onclick="saveUser()">&#10003; Добавить</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-pass">
+  <div class="modal">
+    <div class="mh">
+      <div class="mh-t">Сменить пароль администратора</div>
+      <button class="close-btn" onclick="closeModal('ov-pass')">✕</button>
+    </div>
+    <div class="mb">
+      <label class="fl">Новый пароль</label>
+      <input class="fi" id="np-pass" type="password" placeholder="минимум 6 символов" style="margin-bottom:0">
+      <div class="err" id="np-err"></div>
+    </div>
+    <div class="mf">
+      <button class="bng" onclick="closeModal('ov-pass')">Отмена</button>
+      <button class="bnok" onclick="savePasswordChange()">&#10003; Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка ответа на обращение -->
+<div class="overlay" id="ov-reply">
+  <div class="modal" style="max-width:520px">
+    <div class="mh">
+      <div class="mh-t">Ответить на обращение</div>
+      <button class="close-btn" onclick="closeModal('ov-reply')">✕</button>
+    </div>
+    <div class="mb">
+      <label class="fl">Статус обращения</label>
+      <select class="fi fsl" id="reply-status">
+        <option value="new">🔵 Новый</option>
+        <option value="in_progress">🟡 В работе</option>
+        <option value="resolved">🟢 Решено</option>
+      </select>
+      <label class="fl">Комментарий администратора</label>
+      <textarea class="fta" id="reply-comment" placeholder="Напишите ответ или комментарий сотруднику..." style="min-height:120px;margin-bottom:0"></textarea>
+      <div class="err" id="reply-err"></div>
+    </div>
+    <div class="mf">
+      <button class="bng" onclick="closeModal('ov-reply')">Отмена</button>
+      <button class="bnok" onclick="saveReply()">&#10003; Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+var ME = null;
+var CURRENT_VIEW = 'adm-dashboard';
+var CREATING_TYPE = '';
+var QUESTIONS = [];
+var REPLY_MSG_ID = null;
+var MSGS_MAP = {}; // кэш обращений по id
+
+document.getElementById('logo-img').src = KV_LOGO;
+document.getElementById('favicon').href = KV_LOGO;
+kvInitTheme();
+kvBindOverlayClose();
+
+(function(){
+  ME = kvRequireAuth('admin');
+  if (!ME) return;
+  document.getElementById('u-nm').textContent = ME.name || ME.login;
+  showView('adm-dashboard');
+  kvInitMobileMenu();
+})();
+
+// ===== VIEWS =====
+function showView(v) {
+  CURRENT_VIEW = v;
+  document.querySelectorAll('.lb').forEach(function(b){ b.classList.remove('on'); });
+  var btnMap = {'adm-dashboard':0,'adm-messages':1,'adm-surveys':2,'adm-quizzes':3,'adm-users':4};
+  var lbs = document.querySelectorAll('.lf .lb');
+  if (btnMap[v] !== undefined && lbs[btnMap[v]]) lbs[btnMap[v]].classList.add('on');
+  var mc = document.getElementById('main-content');
+  switch(v) {
+    case 'adm-dashboard': renderAdmDash(mc); break;
+    case 'adm-messages': renderAdmMessages(mc); break;
+    case 'adm-surveys': renderAdmForms(mc, 'survey'); break;
+    case 'adm-quizzes': renderAdmForms(mc, 'quiz'); break;
+    case 'adm-users': renderAdmUsers(mc); break;
+  }
+}
+
+// ===== DASHBOARD =====
+function renderAdmDash(mc) {
+  mc.innerHTML =
+    '<div class="vtit" style="margin-bottom:14px">Дашборд</div>'+
+    '<div id="new-msg-banner-slot"></div>'+
+    '<div class="mon" id="adm-stats">'+
+      '<div class="mc"><div class="mcl">Сотрудников</div><div class="mcv" id="d-users">-</div></div>'+
+      '<div class="mc"><div class="mcl">Опросов</div><div class="mcv" id="d-sq">-</div></div>'+
+      '<div class="mc"><div class="mcl">Тестов</div><div class="mcv" id="d-qz">-</div></div>'+
+      '<div class="mc"><div class="mcl">Обращений</div><div class="mcv" id="d-msg">-</div></div>'+
+    '</div>'+
+    '<div class="dash-grid">'+
+      '<div class="dash-panel">'+
+        '<div class="dash-panel-title">&#128202; Прохождение опросов и тестов</div>'+
+        '<div id="dash-progress"><div class="empty-dash">Загрузка...</div></div>'+
+      '</div>'+
+      '<div class="dash-panel">'+
+        '<div class="dash-panel-title">&#128276; Последняя активность</div>'+
+        '<div id="dash-recent"><div class="empty-dash">Загрузка...</div></div>'+
+      '</div>'+
+    '</div>';
+
+  // ===== Общие счётчики сверху =====
+  sbRpc('kv_admin_list_users', {}).then(function(d){setEl('d-users',(d||[]).length)}).catch(function(){});
+  sbFetch('kv_forms?type=eq.survey&select=id').then(function(r){return r.json()}).then(function(d){setEl('d-sq',d.length)}).catch(function(){});
+  sbFetch('kv_forms?type=eq.quiz&select=id').then(function(r){return r.json()}).then(function(d){setEl('d-qz',d.length)}).catch(function(){});
+  sbFetch('kv_messages?select=id').then(function(r){return r.json()}).then(function(d){setEl('d-msg',d.length);}).catch(function(){});
+
+  loadNewMsgBanner();
+  loadDashProgress();
+  loadDashRecent();
+}
+
+// ===== Баннер новых обращений на дашборде =====
+// Показывается только пока есть обращения со статусом "Новый".
+// Как только админ переводит обращение в работу/решено — оно пропадает отсюда и из счётчика.
+function loadNewMsgBanner() {
+  var slot = document.getElementById('new-msg-banner-slot');
+  if (!slot) return;
+  sbFetch('kv_messages?status=eq.new&select=id,created_at&order=created_at.desc')
+    .then(function(r){return r.json()})
+    .then(function(msgs){
+      var n = (msgs||[]).length;
+      setEl('sb-msg-cnt', n); // держим бейдж в сайдбаре в синхроне с баннером
+      if (!slot) return; // пользователь мог уйти со страницы, пока грузилось
+      if (!n) { slot.innerHTML = ''; return; }
+      var word = (n % 10 === 1 && n % 100 !== 11) ? 'новое обращение' :
+                 ([2,3,4].indexOf(n % 10) !== -1 && [12,13,14].indexOf(n % 100) === -1) ? 'новых обращения' : 'новых обращений';
+      slot.innerHTML =
+        '<div class="new-msg-banner" onclick="showView(\'adm-messages\')">'+
+        '<div class="nb-icon">&#9993;</div>'+
+        '<div class="nb-text"><div class="nb-title">У вас '+n+' '+word+'</div>'+
+        '<div class="nb-sub">Сотрудники ждут реакции — нажмите, чтобы посмотреть и ответить</div></div>'+
+        '<div class="nb-arrow">&#8594;</div>'+
+        '</div>';
+    }).catch(function(){ if (slot) slot.innerHTML = ''; });
+}
+
+// ===== Прохождение опросов/тестов и средний балл =====
+function loadDashProgress() {
+  var box = document.getElementById('dash-progress');
+  if (!box) return;
+
+  Promise.all([
+    sbRpc('kv_admin_list_users', {}),
+    sbFetch('kv_forms?type=eq.survey&is_active=eq.true&select=id').then(function(r){return r.json()}),
+    sbFetch('kv_forms?type=eq.quiz&is_active=eq.true&select=id').then(function(r){return r.json()}),
+    sbFetch('kv_responses?select=user_email,form_id,score,max_score').then(function(r){return r.json()})
+  ]).then(function(res){
+    if (!box) return;
+    var users = res[0]||[], surveys = res[1]||[], quizzes = res[2]||[], responses = res[3]||[];
+    var totalUsers = users.length || 1; // защита от деления на 0
+
+    var surveyIds = surveys.map(function(f){return f.id;});
+    var quizIds = quizzes.map(function(f){return f.id;});
+
+    // Уникальные сотрудники, прошедшие хотя бы один опрос / тест
+    var surveyDoneUsers = {}, quizDoneUsers = {};
+    var quizScores = [];
+    responses.forEach(function(r){
+      if (!r.user_email) return; // анонимные ответы не считаем по сотруднику
+      if (surveyIds.indexOf(r.form_id) !== -1) surveyDoneUsers[r.user_email] = true;
+      if (quizIds.indexOf(r.form_id) !== -1) {
+        quizDoneUsers[r.user_email] = true;
+        if (r.max_score) quizScores.push(Math.round(r.score / r.max_score * 100));
+      }
+    });
+
+    var surveyCnt = Object.keys(surveyDoneUsers).length;
+    var quizCnt = Object.keys(quizDoneUsers).length;
+    var surveyPct = Math.round(surveyCnt / totalUsers * 100);
+    var quizPct = Math.round(quizCnt / totalUsers * 100);
+    var avgScore = quizScores.length ? Math.round(quizScores.reduce(function(a,b){return a+b;},0)/quizScores.length) : null;
+
+    if (!surveys.length && !quizzes.length) {
+      box.innerHTML = '<div class="empty-dash">&#128203; Пока нет активных опросов или тестов</div>';
+      return;
+    }
+
+    var html = '';
+    if (surveys.length) {
+      html += '<div class="progress-row"><div class="progress-row-head"><div class="progress-row-label">Прошли хотя бы один опрос</div><div class="progress-row-val">'+surveyCnt+' / '+users.length+'</div></div><div class="progress-track"><div class="progress-fill" style="width:'+surveyPct+'%"></div></div></div>';
+    }
+    if (quizzes.length) {
+      html += '<div class="progress-row"><div class="progress-row-head"><div class="progress-row-label">Прошли хотя бы один тест</div><div class="progress-row-val">'+quizCnt+' / '+users.length+'</div></div><div class="progress-track"><div class="progress-fill green" style="width:'+quizPct+'%"></div></div></div>';
+    }
+    if (avgScore !== null) {
+      html += '<div class="dash-mini-stat" style="margin-top:6px;padding-top:14px;border-top:1px dashed var(--border)"><span class="dms-label">&#127942; Средний результат по тестам</span><span class="dms-val">'+avgScore+'%</span></div>';
+    }
+    box.innerHTML = html;
+  }).catch(function(){
+    if (box) box.innerHTML = '<div class="empty-dash">Ошибка загрузки</div>';
+  });
+}
+
+// ===== Лента последней активности =====
+function loadDashRecent() {
+  var box = document.getElementById('dash-recent');
+  if (!box) return;
+
+  Promise.all([
+    sbFetch('kv_messages?select=id,subject,msg_type,is_anonymous,user_name,created_at&order=created_at.desc&limit=5').then(function(r){return r.json()}),
+    sbFetch('kv_responses?select=id,user_email,form_id,score,max_score,submitted_at&order=submitted_at.desc&limit=5').then(function(r){return r.json()})
+  ]).then(function(res){
+    if (!box) return;
+    var msgs = (res[0]||[]).map(function(m){
+      return { type:'msg', time:m.created_at, html: (m.is_anonymous ? 'Анонимное обращение' : '<strong>'+esc(m.user_name||'Сотрудник')+'</strong>') + ' отправил'+(m.is_anonymous?'о':'')+' обращение' + (m.subject ? ': «'+esc(m.subject)+'»' : '') };
+    });
+    var resp = (res[1]||[]).map(function(r){
+      var who = r.user_email ? '<strong>'+esc(r.user_email)+'</strong>' : 'Сотрудник';
+      var scoreTxt = r.max_score ? ' (результат '+Math.round(r.score/r.max_score*100)+'%)' : '';
+      return { type:'resp', time:r.submitted_at, html: who + ' прошёл опрос/тест' + scoreTxt };
+    });
+
+    var all = msgs.concat(resp).sort(function(a,b){ return new Date(b.time) - new Date(a.time); }).slice(0, 6);
+
+    if (!all.length) {
+      box.innerHTML = '<div class="empty-dash">&#128276; Активности пока нет</div>';
+      return;
+    }
+
+    box.innerHTML = all.map(function(item){
+      var icon = item.type === 'msg' ? '&#9993;' : '&#9989;';
+      return '<div class="recent-item"><div class="recent-icon">'+icon+'</div><div class="recent-body"><div class="recent-title">'+item.html+'</div><div class="recent-time">'+fmtDate(item.time)+'</div></div></div>';
+    }).join('');
+  }).catch(function(){
+    if (box) box.innerHTML = '<div class="empty-dash">Ошибка загрузки</div>';
+  });
+}
+
+// ===== СТАТУС: текст и класс =====
+function statusLabel(s) {
+  if (s === 'in_progress') return '🟡 В работе';
+  if (s === 'resolved') return '🟢 Решено';
+  return '🔵 Новый';
+}
+function statusClass(s) {
+  if (s === 'in_progress') return 'status-in_progress';
+  if (s === 'resolved') return 'status-resolved';
+  return 'status-new';
+}
+
+// ===== ADMIN MESSAGES =====
+var ALL_MSGS = [];
+
+function renderAdmMessages(mc) {
+  mc.innerHTML =
+    '<div class="ctrl" style="margin-bottom:14px"><div class="vtit">Обращения сотрудников</div><button class="bng" onclick="exportMessagesExcel()">&#128190; Excel</button></div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'+
+    '<input class="fi" id="msg-search" placeholder="&#128269; Поиск по тексту, теме, имени..." style="margin-bottom:0;max-width:340px" oninput="renderMsgList()">'+
+    '<select class="fsl" id="msg-status-filter" style="margin-bottom:0;max-width:180px" onchange="renderMsgList()">'+
+    '<option value="">Любой статус</option><option value="new">Новые</option><option value="in_progress">В работе</option><option value="resolved">Решено</option>'+
+    '</select>'+
+    '</div>'+
+    '<div id="msg-list"><div class="es"><div class="ei">&#9993;</div><div>Загрузка...</div></div></div>';
+  loadAdmMessages();
+}
+
+function loadAdmMessages() {
+  sbFetch('kv_messages?select=*&order=created_at.desc')
+    .then(function(r){return r.json()})
+    .then(function(msgs){
+      ALL_MSGS = msgs || [];
+      // Счётчик новых для бейджа в сайдбаре (0, если новых нет — а не общее число)
+      var newCnt = ALL_MSGS.filter(function(m){return !m.status || m.status==='new';}).length;
+      setEl('sb-msg-cnt', newCnt);
+
+      // Кэшируем обращения
+      MSGS_MAP = {};
+      ALL_MSGS.forEach(function(m){ MSGS_MAP[m.id] = m; });
+
+      renderMsgList();
+    }).catch(function(){
+      var el = document.getElementById('msg-list');
+      if (el) el.innerHTML='<div class="es"><div class="ei">&#9888;</div><div>Ошибка загрузки</div></div>';
+    });
+}
+
+function renderMsgList() {
+  var el = document.getElementById('msg-list');
+  if (!el) return;
+  var q = (document.getElementById('msg-search').value || '').trim().toLowerCase();
+  var statusFilter = document.getElementById('msg-status-filter').value;
+  var msgs = ALL_MSGS.filter(function(m){
+    var st = m.status || 'new';
+    if (statusFilter && st !== statusFilter) return false;
+    if (!q) return true;
+    var hay = (m.subject||'')+' '+(m.body||'')+' '+(m.user_name||'')+' '+(m.user_email||'');
+    return hay.toLowerCase().indexOf(q) !== -1;
+  });
+
+  if (!msgs.length) { el.innerHTML='<div class="es"><div class="ei">&#9993;</div><div>'+(ALL_MSGS.length?'Ничего не найдено':'Обращений пока нет')+'</div></div>'; return; }
+
+  el.innerHTML = msgs.map(function(m){
+    var st = m.status || 'new';
+    var senderName = m.user_name || m.user_email || '—';
+    var senderHtml = m.is_anonymous
+      ? '&#128100; <strong>'+esc(senderName)+'</strong><span class="spy-badge" title="Отправлено анонимно — сотрудник не знает, что вы видите его имя">&#128065; Анонимно</span>'
+      : '&#128100; <strong>'+esc(senderName)+'</strong>';
+
+    var commentHtml = '';
+    if (m.admin_comment) {
+      commentHtml = '<div class="msg-comment-box"><div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">&#128172; Ответ администратора'+
+        (m.admin_name ? ' ('+esc(m.admin_name)+')' : '')+'</div>'+esc(m.admin_comment)+'</div>';
+    }
+
+    var typeHtml = msgTypeBadge(m.msg_type);
+
+    return '<div class="msg-card" id="msg-'+m.id+'">'+
+      '<div class="msg-head"><div class="resp-user">'+senderHtml+'</div><div style="display:flex;align-items:center;gap:8px">'+
+      '<span class="status-badge '+statusClass(st)+'">'+statusLabel(st)+'</span>'+
+      '<div class="resp-date">'+fmtDate(m.created_at)+'</div></div></div>'+
+      '<div style="margin-bottom:5px">'+typeHtml+(m.subject ? '<span style="font-size:13px;font-weight:700;color:var(--text)">'+esc(m.subject)+'</span>' : '')+'</div>'+
+      '<div class="msg-body">'+esc(m.body)+'</div>'+
+      commentHtml+
+      '<div class="msg-actions">'+
+      '<button class="bng bsm msg-reply-btn" data-mid="'+m.id+'">&#128172; Ответить / Статус</button>'+
+      (st === 'resolved' ? '<button class="bndg bsm msg-del-btn" data-mid="'+m.id+'">&#10005; Удалить</button>' : '')+
+      '</div>'+
+      '</div>';
+  }).join('');
+
+  // Делегирование событий — надёжнее чем onclick в строках
+  el.onclick = function(e) {
+    var rb = e.target.closest('.msg-reply-btn');
+    var db = e.target.closest('.msg-del-btn');
+    if (rb) openReply(rb.dataset.mid);
+    if (db) deleteMessage(db.dataset.mid);
+  };
+}
+
+function msgTypeBadge(t) {
+  if (t === 'complaint') return '<span class="msg-type-badge msg-type-complaint">&#9888; Жалоба</span>';
+  if (t === 'suggestion') return '<span class="msg-type-badge msg-type-suggestion">&#128161; Предложение</span>';
+  return '<span class="msg-type-badge msg-type-other">&#9993; Обращение</span>';
+}
+
+// Кнопка "Ответить" просто открывает центральное модальное окно
+function openReply(msgId) {
+  var m = MSGS_MAP[msgId];
+  if (!m) { toast('Ошибка: обращение не найдено', 'err'); return; }
+  REPLY_MSG_ID = msgId;
+  document.getElementById('reply-status').value = m.status || 'new';
+  document.getElementById('reply-comment').value = m.admin_comment || '';
+  document.getElementById('reply-err').textContent = '';
+  openModal('ov-reply');
+}
+
+function saveReply() {
+  var status = document.getElementById('reply-status').value;
+  var comment = document.getElementById('reply-comment').value.trim();
+  var err = document.getElementById('reply-err');
+  err.textContent = '';
+  var payload = {
+    status: status,
+    admin_comment: comment || null,
+    admin_name: ME.name || ME.login || null
+  };
+  if (status === 'resolved') payload.resolved_at = new Date().toISOString();
+
+  sbFetch('kv_messages?id=eq.'+REPLY_MSG_ID, {method:'PATCH', body:JSON.stringify(payload)})
+    .then(function(r){
+      if (r.ok) {
+        closeModal('ov-reply');
+        toast('Сохранено!', 'ok');
+        loadAdmMessages();
+        // Если баннер новых обращений сейчас на экране (дашборд) — обновляем и его
+        if (document.getElementById('new-msg-banner-slot')) loadNewMsgBanner();
+      } else { err.textContent = 'Ошибка сохранения'; }
+    }).catch(function(){ err.textContent = 'Ошибка соединения'; });
+}
+
+function deleteMessage(id) {
+  if (!confirm('Удалить обращение? Оно также исчезнет у сотрудника.')) return;
+  sbFetch('kv_messages?id=eq.'+id, {method:'DELETE'})
+    .then(function(){ toast('Обращение удалено', 'ok'); loadAdmMessages(); })
+    .catch(function(){ toast('Ошибка', 'err'); });
+}
+
+// ===== ADMIN FORMS =====
+function renderAdmForms(mc, type) {
+  var label = type === 'survey' ? 'Опросы' : 'Тесты';
+  mc.innerHTML = '<div class="ctrl" style="margin-bottom:14px"><div class="vtit">'+label+'</div><button class="bnok" onclick="openCreate(\''+type+'\')">+ Создать</button></div><div class="cg" id="adm-forms-grid"><div class="es"><div class="ei">&#128203;</div><div>Загрузка...</div></div></div>';
+  loadAdmForms(type);
+}
+
+function loadAdmForms(type) {
+  sbFetch('kv_forms?type=eq.'+type+'&select=*&order=created_at.desc')
+    .then(function(r){return r.json()})
+    .then(function(forms){
+      var g = document.getElementById('adm-forms-grid');
+      if (!g) return;
+      if (!forms || !forms.length) { g.innerHTML='<div class="es"><div class="ei">&#128203;</div><div>Нет '+(type==='survey'?'опросов':'тестов')+'. Создайте первый!</div></div>'; return; }
+      g.innerHTML = forms.map(function(f){
+        var qCount = (f.questions||[]).length;
+        // FIX: используем data-атрибут вместо вложенного JSON.stringify для кнопки результатов
+        var fDataAttr = 'data-fid="'+f.id+'"';
+        return '<div class="card">'+
+          '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'+
+          '<div><span class="lt '+(type==='survey'?'lt-s':'lt-q')+'">'+(type==='survey'?'&#128203; Опрос':'&#127942; Тест')+'</span>'+
+          (f.is_active?'<span class="lt lt-a" style="margin-left:4px">&#9679; Активен</span>':'<span class="lt" style="margin-left:4px;color:var(--muted);border-color:var(--border)">&#9675; Скрыт</span>')+'</div>'+
+          '<div style="display:flex;gap:4px;flex-shrink:0"><button class="bndg bsm" onclick="deleteForm(\''+f.id+'\',\''+type+'\')">&#10005;</button></div>'+
+          '</div>'+
+          '<div class="ctt">'+esc(f.title)+'</div>'+
+          '<div class="cpr">'+esc(f.description||'')+'</div>'+
+          '<div class="cmeta"><span class="cpcnt">&#10067; '+qCount+' вопр.</span><span class="cdt">'+fmtDate(f.created_at)+'</span></div>'+
+          '<div style="display:flex;gap:6px;margin-top:10px">'+
+          '<button class="bng" onclick="openResults(\''+f.id+'\',\''+esc(type)+'\',\''+esc(f.title)+'\')">&#128202; Результаты</button>'+
+          '<button class="bng" onclick="toggleFormActive(\''+f.id+'\','+(!f.is_active)+',\''+type+'\')">'+(!f.is_active?'Активировать':'Скрыть')+'</button>'+
+          '</div>'+
+          '</div>';
+      }).join('');
+    }).catch(function(){});
+}
+
+function deleteForm(id, type) {
+  if (!confirm('Удалить? Все ответы тоже будут удалены.')) return;
+  sbFetch('kv_forms?id=eq.'+id, {method:'DELETE'}).then(function(){ toast('Удалено','ok'); loadAdmForms(type); }).catch(function(){ toast('Ошибка','err'); });
+}
+
+function toggleFormActive(id, newState, type) {
+  sbFetch('kv_forms?id=eq.'+id, {method:'PATCH', body:JSON.stringify({is_active: newState})}).then(function(){ loadAdmForms(type); }).catch(function(){ toast('Ошибка','err'); });
+}
+
+// ===== RESULTS — FIX: грузим форму отдельным запросом по id =====
+var RES_FORM = null, RES_TYPE = null, RES_RESPS = null;
+
+function openResults(formId, type, title) {
+  document.getElementById('res-title').textContent = title + ' — Результаты';
+  document.getElementById('res-body').innerHTML = '<div class="es"><div class="ei">&#128202;</div><div>Загрузка...</div></div>';
+  document.getElementById('res-export-btn').style.display = 'none';
+  openModal('ov-results');
+
+  // Загружаем форму и ответы параллельно
+  Promise.all([
+    sbFetch('kv_forms?id=eq.'+formId+'&select=*').then(function(r){return r.json()}),
+    sbFetch('kv_responses?form_id=eq.'+formId+'&select=*&order=submitted_at.desc').then(function(r){return r.json()})
+  ]).then(function(results){
+    var forms = results[0];
+    var resps = results[1];
+    var f = forms && forms[0];
+    if (!f) { document.getElementById('res-body').innerHTML='<div class="es"><div class="ei">&#9888;</div><div>Форма не найдена</div></div>'; return; }
+    renderResults(f, type, resps || []);
+  }).catch(function(){
+    document.getElementById('res-body').innerHTML='<div class="es"><div class="ei">&#9888;</div><div>Ошибка загрузки</div></div>';
+  });
+}
+
+function renderResults(f, type, resps) {
+  RES_FORM = f; RES_TYPE = type; RES_RESPS = resps;
+  document.getElementById('res-export-btn').style.display = resps.length ? 'inline-flex' : 'none';
+
+  if (!resps.length) {
+    document.getElementById('res-body').innerHTML='<div class="es"><div class="ei">&#128202;</div><div>Ответов пока нет</div></div>';
+    return;
+  }
+  var qs = f.questions || [];
+  var html = '';
+
+  html += '<div class="sec-title">Сводная статистика ('+resps.length+' ответов)</div>';
+
+  if (type === 'quiz') {
+    var scores = resps.filter(function(r){return r.score !== null && r.max_score;}).map(function(r){return Math.round(r.score/r.max_score*100);});
+    if (scores.length) {
+      var avg = Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length);
+      html += '<div style="display:flex;gap:10px;margin-bottom:14px"><div class="mc" style="flex:1"><div class="mcl">Средний балл</div><div class="mcv">'+avg+'%</div></div><div class="mc" style="flex:1"><div class="mcl">Участников</div><div class="mcv">'+resps.length+'</div></div></div>';
+      html += scoreDonutHtml(scores);
+    }
+  }
+
+  qs.forEach(function(q, qi) {
+    html += '<div class="detail-q"><div class="detail-q-text">'+(qi+1)+'. '+esc(q.text)+'</div>';
+    if (q.type === 'text') {
+      html += '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">Свободный текст:</div>';
+      resps.forEach(function(r) {
+        var ans = (r.answers||[])[qi];
+        if (ans && ans.value) {
+          // Показываем реального отправителя всегда
+          var senderDisp = r.user_name || r.user_email || '—';
+          var anonMark = r.is_anonymous ? ' <span class="spy-badge">&#128065; Анонимно</span>' : '';
+          html += '<div style="padding:7px 10px;background:var(--card2);border-radius:var(--radius-xs);font-size:13px;margin-bottom:4px;border-left:2px solid var(--y)"><span style="font-size:10px;color:var(--muted);font-weight:700">'+esc(senderDisp)+anonMark+'</span><br>'+esc(ans.value)+'</div>';
+        }
+      });
+    } else if (q.type === 'single' || q.type === 'multi') {
+      var counts = {};
+      resps.forEach(function(r) {
+        var ans = (r.answers||[])[qi];
+        if (!ans) return;
+        var vals = Array.isArray(ans.value) ? ans.value : [ans.value];
+        vals.forEach(function(v) { if (v !== null && v !== undefined) counts[v] = (counts[v]||0)+1; });
+      });
+      (q.options||[]).forEach(function(opt, oi) {
+        var cnt = counts[oi] || 0;
+        var pct = resps.length ? Math.round(cnt/resps.length*100) : 0;
+        var isCorrect = opt.correct;
+        html += '<div class="bar-row"><div class="bar-label">'+esc(opt.text)+(isCorrect&&type==='quiz'?' ✓':'')+'</div><div class="bar-track"><div class="bar-fill'+(isCorrect&&type==='quiz'?' correct':'')+'" style="width:'+pct+'%"></div></div><div class="bar-cnt">'+cnt+' ('+pct+'%)</div></div>';
+      });
+    }
+    html += '</div>';
+  });
+
+  html += '<div class="hdiv"></div><div class="sec-title" style="margin-top:4px">Индивидуальные ответы</div>';
+  resps.forEach(function(r) {
+    var pctHtml = '';
+    if (type === 'quiz' && r.max_score) {
+      var p = Math.round(r.score/r.max_score*100);
+      pctHtml = '<span class="score-pill '+(p>=70?'high':p<40?'low':'')+'">'+r.score+'/'+r.max_score+' ('+p+'%)</span>';
+    }
+    var senderName = r.user_name || r.user_email || '—';
+    var anonMark = r.is_anonymous ? ' <span class="spy-badge">&#128065; Анонимно</span>' : '';
+    html += '<div class="resp-card"><div class="resp-head"><div class="resp-user">&#128100; '+esc(senderName)+anonMark+' '+pctHtml+'</div><div class="resp-date">'+fmtDate(r.submitted_at)+'</div></div>';
+    qs.forEach(function(q, qi) {
+      var ans = (r.answers||[])[qi];
+      if (!ans) return;
+      var dispVal = '';
+      if (q.type === 'text') dispVal = esc(ans.value||'—');
+      else if (q.type === 'single') {
+        var opt = (q.options||[])[ans.value];
+        dispVal = opt ? esc(opt.text)+(opt.correct&&type==='quiz'?' ✓':(!opt.correct&&type==='quiz'?' ✗':'')) : '—';
+      } else if (q.type === 'multi') {
+        var vals = ans.value || [];
+        dispVal = vals.map(function(v){ var o=(q.options||[])[v]; return o?esc(o.text):'?'; }).join(', ') || '—';
+      }
+      html += '<div class="q-resp"><div class="q-resp-label">'+esc(q.text)+'</div><div class="q-resp-val">'+dispVal+'</div></div>';
+    });
+    html += '</div>';
+  });
+
+  document.getElementById('res-body').innerHTML = html;
+}
+
+// ===== ДОНАТ-ДИАГРАММА: распределение результатов теста по группам =====
+function scoreDonutHtml(scores) {
+  var hi = scores.filter(function(s){return s>=70;}).length;
+  var mid = scores.filter(function(s){return s>=40 && s<70;}).length;
+  var lo = scores.filter(function(s){return s<40;}).length;
+  var total = scores.length;
+  var segs = [
+    {v:hi, color:'#2e7d32', label:'70%+ (отлично)'},
+    {v:mid, color:'#FFC800', label:'40–69% (средне)'},
+    {v:lo, color:'#d32f2f', label:'<40% (слабо)'}
+  ];
+  var r = 46, cx = 60, cy = 60, circ = 2*Math.PI*r;
+  var offset = 0;
+  var circles = segs.map(function(s){
+    if (!s.v) return '';
+    var frac = s.v/total;
+    var dash = frac*circ;
+    var c = '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+s.color+'" stroke-width="16" '+
+      'stroke-dasharray="'+dash.toFixed(1)+' '+(circ-dash).toFixed(1)+'" stroke-dashoffset="'+(-offset).toFixed(1)+'" transform="rotate(-90 '+cx+' '+cy+')"/>';
+    offset += dash;
+    return c;
+  }).join('');
+  var legend = segs.map(function(s){
+    return '<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);margin-bottom:5px">'+
+      '<span style="width:10px;height:10px;border-radius:3px;background:'+s.color+';flex-shrink:0"></span>'+
+      s.label+' — <strong>'+s.v+'</strong></div>';
+  }).join('');
+  return '<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:18px;padding:14px;background:var(--card2);border-radius:var(--radius-sm);border:1.5px solid var(--border)">'+
+    '<svg viewBox="0 0 120 120" width="110" height="110">'+circles+'</svg>'+
+    '<div>'+legend+'</div>'+
+    '</div>';
+}
+
+// ===== ЭКСПОРТ РЕЗУЛЬТАТОВ В EXCEL =====
+function exportResultsExcel() {
+  if (!RES_FORM || !RES_RESPS || !RES_RESPS.length) { toast('Нет данных для экспорта', 'err'); return; }
+  if (typeof XLSX === 'undefined') { toast('Библиотека Excel не загрузилась. Проверьте интернет-соединение.', 'err'); return; }
+
+  var qs = RES_FORM.questions || [];
+  var rows = RES_RESPS.map(function(r){
+    var row = {
+      'Сотрудник': r.is_anonymous ? 'Анонимно' : (r.user_name || r.user_email || '—'),
+      'Дата': fmtDate(r.submitted_at)
+    };
+    if (RES_TYPE === 'quiz' && r.max_score) {
+      row['Балл'] = r.score + ' / ' + r.max_score;
+      row['Процент'] = Math.round(r.score / r.max_score * 100) + '%';
+    }
+    qs.forEach(function(q, qi){
+      var ans = (r.answers||[])[qi];
+      var val = '';
+      if (ans) {
+        if (q.type === 'text') val = ans.value || '';
+        else if (q.type === 'single') { var o = (q.options||[])[ans.value]; val = o ? o.text : ''; }
+        else if (q.type === 'multi') { var vals = ans.value || []; val = vals.map(function(v){ var o=(q.options||[])[v]; return o?o.text:''; }).join(', '); }
+      }
+      row[(qi+1)+'. '+(q.text||'')] = val;
+    });
+    return row;
+  });
+
+  var ws = XLSX.utils.json_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Результаты');
+  var safeTitle = (RES_FORM.title || 'results').replace(/[\\/:*?"<>|]/g, '_').slice(0, 40);
+  XLSX.writeFile(wb, 'KapitalVoice — ' + safeTitle + '.xlsx');
+  toast('Файл скачан', 'ok');
+}
+
+// ===== CREATE FORM =====
+function openCreate(type) {
+  CREATING_TYPE = type;
+  QUESTIONS = [];
+  document.getElementById('create-title').textContent = type==='survey'?'Создать опрос':'Создать тест';
+  document.getElementById('create-body').innerHTML =
+    '<label class="fl">Название</label>'+
+    '<input class="fi" id="cf-title" placeholder="Название опроса/теста">'+
+    '<label class="fl">Описание (необязательно)</label>'+
+    '<input class="fi" id="cf-desc" placeholder="Краткое описание">'+
+    '<div class="hdiv"></div>'+
+    '<div class="sec-title">Вопросы</div>'+
+    '<div id="q-builder"></div>'+
+    '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'+
+    '<button class="bng" onclick="addQuestion(\'text\')">+ Текст</button>'+
+    '<button class="bng" onclick="addQuestion(\'single\')">+ Один выбор</button>'+
+    '<button class="bng" onclick="addQuestion(\'multi\')">+ Несколько</button>'+
+    '</div>';
+  renderQBuilder();
+  openModal('ov-create');
+}
+
+function addQuestion(type) {
+  QUESTIONS.push({ type: type, text: '', options: type !== 'text' ? [{text:'',correct:false},{text:'',correct:false}] : [] });
+  renderQBuilder();
+}
+
+function removeQuestion(i) { QUESTIONS.splice(i,1); renderQBuilder(); }
+function addOption(qi) {
+  if (QUESTIONS[qi].options.length >= 4) { toast('Максимум 4 варианта ответа (A–D)', 'err'); return; }
+  QUESTIONS[qi].options.push({text:'',correct:false});
+  renderQBuilder();
+}
+function removeOption(qi, oi) { QUESTIONS[qi].options.splice(oi,1); renderQBuilder(); }
+
+function syncQData() {
+  QUESTIONS.forEach(function(q,qi){
+    var t = document.getElementById('qt-'+qi);
+    if (t) q.text = t.value;
+    if (q.options) {
+      q.options.forEach(function(opt,oi){
+        var ot = document.getElementById('qo-'+qi+'-'+oi);
+        if (ot) opt.text = ot.value;
+      });
+    }
+  });
+}
+
+function toggleCorrect(qi, oi) {
+  syncQData();
+  if (QUESTIONS[qi].type === 'single') { QUESTIONS[qi].options.forEach(function(o){o.correct=false;}); }
+  QUESTIONS[qi].options[oi].correct = !QUESTIONS[qi].options[oi].correct;
+  renderQBuilder();
+}
+
+function renderQBuilder() {
+  var el = document.getElementById('q-builder');
+  if (!el) return;
+  var LETTERS = ['A','B','C','D'];
+  if (!QUESTIONS.length) { el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:12px;text-align:center">Добавьте вопросы</div>'; return; }
+  el.innerHTML = QUESTIONS.map(function(q,qi){
+    var typeLbl = q.type==='text'?'Текст':q.type==='single'?'Один ответ':'Несколько';
+    var html = '<div class="q-item"><div class="q-actions"><button class="bndg bsm" onclick="syncQData();removeQuestion('+qi+')">✕</button></div><div class="q-num">Вопрос '+(qi+1)+' · '+typeLbl+'</div><input id="qt-'+qi+'" class="fi" value="'+esc(q.text||'')+'" placeholder="Текст вопроса" style="margin-bottom:8px"><div class="opt-list">';
+    if (q.type !== 'text' && q.options) {
+      q.options.forEach(function(opt,oi){
+        var letter = LETTERS[oi] || (oi+1);
+        html += '<div class="opt-row"><div class="opt-mark'+(opt.correct?' right':'')+'" onclick="toggleCorrect('+qi+','+oi+')" title="Отметить как правильный">'+letter+'</div><input id="qo-'+qi+'-'+oi+'" type="text" value="'+esc(opt.text||'')+'" placeholder="Вариант '+letter+'"><button class="bndg bsm" onclick="syncQData();removeOption('+qi+','+oi+')">✕</button></div>';
+      });
+      if (q.options.length < 4) {
+        html += '<span class="add-opt" onclick="syncQData();addOption('+qi+')">+ вариант ('+LETTERS[q.options.length]+')</span>';
+      } else {
+        html += '<div style="font-size:11px;color:var(--muted);margin-top:4px">Максимум 4 варианта (A–D)</div>';
+      }
+    }
+    html += '</div></div>';
+    return html;
+  }).join('');
+}
+
+function saveForm() {
+  syncQData();
+  var title = document.getElementById('cf-title').value.trim();
+  var desc = document.getElementById('cf-desc').value.trim();
+  if (!title) { toast('Введите название', 'err'); return; }
+  if (!QUESTIONS.length) { toast('Добавьте хотя бы один вопрос', 'err'); return; }
+
+  // Для тестов проверяем, что у каждого вопроса с вариантами отмечен
+  // хотя бы один правильный ответ — иначе сотрудник гарантированно получит 0%.
+  if (CREATING_TYPE === 'quiz') {
+    var unmarked = [];
+    QUESTIONS.forEach(function(q, qi) {
+      if ((q.type === 'single' || q.type === 'multi') && q.options) {
+        var hasCorrect = q.options.some(function(o){ return o.correct; });
+        if (!hasCorrect) unmarked.push(qi + 1);
+      }
+    });
+    if (unmarked.length) {
+      toast('Отметьте правильный ответ в вопросе(ах): '+unmarked.join(', '), 'err');
+      return;
+    }
+  }
+
+  var payload = { title:title, description:desc, type:CREATING_TYPE, questions:QUESTIONS, is_active:true, created_by:ME.email||ME.login };
+  sbFetch('kv_forms', {method:'POST', body:JSON.stringify(payload)}).then(function(r){
+    if (r.ok) { closeModal('ov-create'); toast('Сохранено!', 'ok'); loadAdmForms(CREATING_TYPE); }
+    else { toast('Ошибка сохранения', 'err'); }
+  }).catch(function(){ toast('Ошибка соединения', 'err'); });
+}
+
+// ===== ADMIN USERS =====
+var NU_TYPE = 'user';
+var PASS_CHANGE_ID = null;
+var ALL_USERS = [];
+
+function renderAdmUsers(mc) {
+  mc.innerHTML =
+    '<div class="ctrl" style="margin-bottom:14px"><div class="vtit">Сотрудники и администраторы</div><div style="display:flex;gap:8px"><button class="bng" onclick="exportUsersExcel()">&#128190; Excel</button><button class="bnok" onclick="openAddUser()">+ Добавить</button></div></div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'+
+    '<input class="fi" id="users-search" placeholder="&#128269; Поиск по имени, почте или логину..." style="margin-bottom:0;max-width:340px" oninput="renderUserList()">'+
+    '<select class="fsl" id="users-role-filter" style="margin-bottom:0;max-width:180px" onchange="renderUserList()">'+
+    '<option value="">Все роли</option><option value="user">Сотрудники</option><option value="admin">Администраторы</option>'+
+    '</select>'+
+    '</div>'+
+    '<div id="user-list"><div class="es"><div class="ei">&#128101;</div><div>Загрузка...</div></div></div>';
+  loadUsers();
+}
+
+function openAddUser() {
+  document.getElementById('nu-err').textContent = '';
+  document.getElementById('nu-email').value = '';
+  document.getElementById('nu-name').value = '';
+  document.getElementById('nu-login').value = '';
+  document.getElementById('nu-adm-pass').value = '';
+  document.getElementById('nu-adm-name').value = '';
+  switchUserType('user');
+  openModal('ov-user');
+}
+
+function switchUserType(type) {
+  NU_TYPE = type;
+  document.getElementById('nu-tab-user').classList.toggle('on', type==='user');
+  document.getElementById('nu-tab-admin').classList.toggle('on', type==='admin');
+  document.getElementById('nu-fields-user').style.display = type==='user' ? 'block' : 'none';
+  document.getElementById('nu-fields-admin').style.display = type==='admin' ? 'block' : 'none';
+  document.getElementById('nu-err').textContent = '';
+}
+
+function loadUsers() {
+  sbRpc('kv_admin_list_users', {})
+    .then(function(users){
+      ALL_USERS = users || [];
+      renderUserList();
+    }).catch(function(){document.getElementById('user-list').innerHTML='<div class="es"><div class="ei">&#9888;</div><div>Ошибка</div></div>';});
+}
+
+function renderUserList() {
+  var el = document.getElementById('user-list');
+  if (!el) return;
+  var q = (document.getElementById('users-search').value || '').trim().toLowerCase();
+  var roleFilter = document.getElementById('users-role-filter').value;
+  var users = ALL_USERS.filter(function(u){
+    if (roleFilter && u.role !== roleFilter) return false;
+    if (!q) return true;
+    var hay = (u.name||'')+' '+(u.email||'')+' '+(u.login||'');
+    return hay.toLowerCase().indexOf(q) !== -1;
+  });
+  if (!users.length) { el.innerHTML='<div class="es"><div class="ei">&#128101;</div><div>'+(ALL_USERS.length?'Ничего не найдено':'Пользователей нет')+'</div></div>'; return; }
+  el.innerHTML = '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Имя</th><th>Почта / Логин</th><th>Роль</th><th>Добавлен</th><th></th></tr></thead><tbody>'+
+    users.map(function(u){
+      var isAdmin = u.role === 'admin';
+      var actions = '';
+      if (isAdmin) actions += '<button class="bng bsm" onclick="openChangePassword(\''+u.id+'\')" title="Сменить пароль">&#128273;</button> ';
+      if (u.id !== ME.id) actions += '<button class="bndg bsm" onclick="deleteUser(\''+u.id+'\')">✕</button>';
+      return '<tr><td>'+esc(u.name||'—')+'</td><td class="email-chip">'+(isAdmin?esc(u.login||'—'):esc(u.email||'—'))+'</td><td><span class="role-badge '+(isAdmin?'admin':'user')+'">'+u.role.toUpperCase()+'</span></td><td style="font-size:11px;color:var(--muted)">'+fmtDate(u.created_at)+'</td><td style="white-space:nowrap">'+actions+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+
+function saveUser() {
+  var err = document.getElementById('nu-err');
+  err.textContent = '';
+  if (NU_TYPE === 'user') {
+    var email = document.getElementById('nu-email').value.trim().toLowerCase();
+    var name = document.getElementById('nu-name').value.trim();
+    if (!email || !name) { err.textContent='Заполните все поля'; return; }
+    sbRpc('kv_admin_add_employee', { p_email: email, p_name: name }).then(function(){
+      closeModal('ov-user'); toast('Сотрудник добавлен','ok'); loadUsers();
+    }).catch(function(e){ err.textContent = e.message || 'Ошибка (почта уже существует?)'; });
+  } else {
+    var login = document.getElementById('nu-login').value.trim();
+    var pass = document.getElementById('nu-adm-pass').value;
+    var aname = document.getElementById('nu-adm-name').value.trim();
+    if (!login || !pass || !aname) { err.textContent='Заполните все поля'; return; }
+    if (pass.length < 6) { err.textContent='Пароль минимум 6 символов'; return; }
+    sbRpc('kv_admin_add_admin', { p_login: login, p_pass: pass, p_name: aname }).then(function(){
+      closeModal('ov-user'); toast('Администратор добавлен','ok'); loadUsers();
+    }).catch(function(e){ err.textContent = e.message || 'Ошибка (логин уже существует?)'; });
+  }
+}
+
+function openChangePassword(id) {
+  PASS_CHANGE_ID = id;
+  document.getElementById('np-pass').value = '';
+  document.getElementById('np-err').textContent = '';
+  openModal('ov-pass');
+}
+
+function savePasswordChange() {
+  var pass = document.getElementById('np-pass').value;
+  var err = document.getElementById('np-err');
+  if (!pass || pass.length < 6) { err.textContent = 'Пароль минимум 6 символов'; return; }
+  sbRpc('kv_admin_set_password', { p_user_id: PASS_CHANGE_ID, p_new_pass: pass }).then(function(){
+    closeModal('ov-pass'); toast('Пароль изменён','ok');
+  }).catch(function(){ err.textContent = 'Ошибка сохранения'; });
+}
+
+function deleteUser(id) {
+  if (!confirm('Удалить пользователя?')) return;
+  sbRpc('kv_admin_delete_user', { p_user_id: id }).then(function(){ toast('Удалено','ok'); loadUsers(); }).catch(function(){ toast('Ошибка','err'); });
+}
+
+function exportUsersExcel() {
+  if (typeof XLSX === 'undefined') { toast('Библиотека Excel не загрузилась', 'err'); return; }
+  if (!ALL_USERS.length) { toast('Нет данных для экспорта', 'err'); return; }
+  var rows = ALL_USERS.map(function(u){
+    return {
+      'Имя': u.name || '',
+      'Почта': u.email || '',
+      'Логин': u.login || '',
+      'Роль': u.role === 'admin' ? 'Администратор' : 'Сотрудник',
+      'Добавлен': fmtDate(u.created_at)
+    };
+  });
+  var ws = XLSX.utils.json_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Сотрудники');
+  XLSX.writeFile(wb, 'KapitalVoice — Сотрудники.xlsx');
+  toast('Файл скачан', 'ok');
+}
+
+function exportMessagesExcel() {
+  if (typeof XLSX === 'undefined') { toast('Библиотека Excel не загрузилась', 'err'); return; }
+  if (!ALL_MSGS.length) { toast('Нет данных для экспорта', 'err'); return; }
+  var rows = ALL_MSGS.map(function(m){
+    return {
+      'Отправитель': m.is_anonymous ? 'Анонимно' : (m.user_name || m.user_email || ''),
+      'Тип': m.msg_type === 'complaint' ? 'Жалоба' : m.msg_type === 'suggestion' ? 'Предложение' : 'Обращение',
+      'Тема': m.subject || '',
+      'Текст': m.body || '',
+      'Статус': statusLabel(m.status || 'new'),
+      'Ответ администратора': m.admin_comment || '',
+      'Дата': fmtDate(m.created_at)
+    };
+  });
+  var ws = XLSX.utils.json_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Обращения');
+  XLSX.writeFile(wb, 'KapitalVoice — Обращения.xlsx');
+  toast('Файл скачан', 'ok');
+}
+</script>
+</body>
+</html>
