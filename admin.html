@@ -20,14 +20,12 @@
 
 .msg-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px}
 .msg-comment-box{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--radius-xs);padding:10px;margin-top:10px;font-size:12px}
-/* Кнопка "Ответить" — справа в строке действий */
 .msg-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
 .msg-type-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-right:6px}
 .msg-type-complaint{background:rgba(211,47,47,.08);color:var(--danger);border:1px solid rgba(211,47,47,.25)}
 .msg-type-suggestion{background:rgba(46,125,50,.08);color:var(--ok);border:1px solid rgba(46,125,50,.25)}
 .msg-type-other{background:rgba(255,200,0,.1);color:var(--yd);border:1px solid rgba(255,200,0,.3)}
 
-/* ===== ДАШБОРД ===== */
 .new-msg-banner{
   display:flex;align-items:center;gap:12px;
   background:linear-gradient(135deg,rgba(255,200,0,.16),rgba(255,200,0,.06));
@@ -135,7 +133,6 @@
   </div>
 </div>
 
-<!-- MODALS -->
 <div class="overlay" id="ov-create">
   <div class="modal" id="modal-create" style="max-width:700px">
     <div class="mh">
@@ -217,7 +214,6 @@
   </div>
 </div>
 
-<!-- Модалка ответа на обращение -->
 <div class="overlay" id="ov-reply">
   <div class="modal" style="max-width:520px">
     <div class="mh">
@@ -251,7 +247,7 @@ var CURRENT_VIEW = 'adm-dashboard';
 var CREATING_TYPE = '';
 var QUESTIONS = [];
 var REPLY_MSG_ID = null;
-var MSGS_MAP = {}; // кэш обращений по id
+var MSGS_MAP = {}; 
 
 document.getElementById('logo-img').src = KV_LOGO;
 document.getElementById('favicon').href = KV_LOGO;
@@ -266,7 +262,7 @@ kvBindOverlayClose();
   kvInitMobileMenu();
 })();
 
-// ===== VIEWS =====
+
 function showView(v) {
   CURRENT_VIEW = v;
   document.querySelectorAll('.lb').forEach(function(b){ b.classList.remove('on'); });
@@ -283,7 +279,7 @@ function showView(v) {
   }
 }
 
-// ===== DASHBOARD =====
+
 function renderAdmDash(mc) {
   mc.innerHTML =
     '<div class="vtit" style="margin-bottom:14px">Дашборд</div>'+
@@ -305,7 +301,7 @@ function renderAdmDash(mc) {
       '</div>'+
     '</div>';
 
-  // ===== Общие счётчики сверху =====
+
   sbRpc('kv_admin_list_users', {}).then(function(d){setEl('d-users',(d||[]).length)}).catch(function(){});
   sbFetch('kv_forms?type=eq.survey&select=id').then(function(r){return r.json()}).then(function(d){setEl('d-sq',d.length)}).catch(function(){});
   sbFetch('kv_forms?type=eq.quiz&select=id').then(function(r){return r.json()}).then(function(d){setEl('d-qz',d.length)}).catch(function(){});
@@ -316,9 +312,7 @@ function renderAdmDash(mc) {
   loadDashRecent();
 }
 
-// ===== Баннер новых обращений на дашборде =====
-// Показывается только пока есть обращения со статусом "Новый".
-// Как только админ переводит обращение в работу/решено — оно пропадает отсюда и из счётчика.
+
 function loadNewMsgBanner() {
   var slot = document.getElementById('new-msg-banner-slot');
   if (!slot) return;
@@ -326,8 +320,8 @@ function loadNewMsgBanner() {
     .then(function(r){return r.json()})
     .then(function(msgs){
       var n = (msgs||[]).length;
-      setEl('sb-msg-cnt', n); // держим бейдж в сайдбаре в синхроне с баннером
-      if (!slot) return; // пользователь мог уйти со страницы, пока грузилось
+      setEl('sb-msg-cnt', n);
+      if (!slot) return;
       if (!n) { slot.innerHTML = ''; return; }
       var word = (n % 10 === 1 && n % 100 !== 11) ? 'новое обращение' :
                  ([2,3,4].indexOf(n % 10) !== -1 && [12,13,14].indexOf(n % 100) === -1) ? 'новых обращения' : 'новых обращений';
@@ -341,7 +335,6 @@ function loadNewMsgBanner() {
     }).catch(function(){ if (slot) slot.innerHTML = ''; });
 }
 
-// ===== Прохождение опросов/тестов и средний балл =====
 function loadDashProgress() {
   var box = document.getElementById('dash-progress');
   if (!box) return;
@@ -354,16 +347,15 @@ function loadDashProgress() {
   ]).then(function(res){
     if (!box) return;
     var users = res[0]||[], surveys = res[1]||[], quizzes = res[2]||[], responses = res[3]||[];
-    var totalUsers = users.length || 1; // защита от деления на 0
-
+    var totalUsers = users.length || 1; 
     var surveyIds = surveys.map(function(f){return f.id;});
     var quizIds = quizzes.map(function(f){return f.id;});
 
-    // Уникальные сотрудники, прошедшие хотя бы один опрос / тест
+
     var surveyDoneUsers = {}, quizDoneUsers = {};
     var quizScores = [];
     responses.forEach(function(r){
-      if (!r.user_email) return; // анонимные ответы не считаем по сотруднику
+      if (!r.user_email) return; 
       if (surveyIds.indexOf(r.form_id) !== -1) surveyDoneUsers[r.user_email] = true;
       if (quizIds.indexOf(r.form_id) !== -1) {
         quizDoneUsers[r.user_email] = true;
@@ -398,7 +390,7 @@ function loadDashProgress() {
   });
 }
 
-// ===== Лента последней активности =====
+
 function loadDashRecent() {
   var box = document.getElementById('dash-recent');
   if (!box) return;
@@ -433,7 +425,7 @@ function loadDashRecent() {
   });
 }
 
-// ===== СТАТУС: текст и класс =====
+
 function statusLabel(s) {
   if (s === 'in_progress') return '🟡 В работе';
   if (s === 'resolved') return '🟢 Решено';
@@ -445,7 +437,7 @@ function statusClass(s) {
   return 'status-new';
 }
 
-// ===== ADMIN MESSAGES =====
+
 var ALL_MSGS = [];
 
 function renderAdmMessages(mc) {
@@ -466,11 +458,11 @@ function loadAdmMessages() {
     .then(function(r){return r.json()})
     .then(function(msgs){
       ALL_MSGS = msgs || [];
-      // Счётчик новых для бейджа в сайдбаре (0, если новых нет — а не общее число)
+  
       var newCnt = ALL_MSGS.filter(function(m){return !m.status || m.status==='new';}).length;
       setEl('sb-msg-cnt', newCnt);
 
-      // Кэшируем обращения
+
       MSGS_MAP = {};
       ALL_MSGS.forEach(function(m){ MSGS_MAP[m.id] = m; });
 
@@ -525,7 +517,7 @@ function renderMsgList() {
       '</div>';
   }).join('');
 
-  // Делегирование событий — надёжнее чем onclick в строках
+
   el.onclick = function(e) {
     var rb = e.target.closest('.msg-reply-btn');
     var db = e.target.closest('.msg-del-btn');
@@ -540,7 +532,6 @@ function msgTypeBadge(t) {
   return '<span class="msg-type-badge msg-type-other">&#9993; Обращение</span>';
 }
 
-// Кнопка "Ответить" просто открывает центральное модальное окно
 function openReply(msgId) {
   var m = MSGS_MAP[msgId];
   if (!m) { toast('Ошибка: обращение не найдено', 'err'); return; }
@@ -569,7 +560,7 @@ function saveReply() {
         closeModal('ov-reply');
         toast('Сохранено!', 'ok');
         loadAdmMessages();
-        // Если баннер новых обращений сейчас на экране (дашборд) — обновляем и его
+      
         if (document.getElementById('new-msg-banner-slot')) loadNewMsgBanner();
       } else { err.textContent = 'Ошибка сохранения'; }
     }).catch(function(){ err.textContent = 'Ошибка соединения'; });
@@ -582,7 +573,7 @@ function deleteMessage(id) {
     .catch(function(){ toast('Ошибка', 'err'); });
 }
 
-// ===== ADMIN FORMS =====
+
 function renderAdmForms(mc, type) {
   var label = type === 'survey' ? 'Опросы' : 'Тесты';
   mc.innerHTML = '<div class="ctrl" style="margin-bottom:14px"><div class="vtit">'+label+'</div><button class="bnok" onclick="openCreate(\''+type+'\')">+ Создать</button></div><div class="cg" id="adm-forms-grid"><div class="es"><div class="ei">&#128203;</div><div>Загрузка...</div></div></div>';
@@ -598,7 +589,7 @@ function loadAdmForms(type) {
       if (!forms || !forms.length) { g.innerHTML='<div class="es"><div class="ei">&#128203;</div><div>Нет '+(type==='survey'?'опросов':'тестов')+'. Создайте первый!</div></div>'; return; }
       g.innerHTML = forms.map(function(f){
         var qCount = (f.questions||[]).length;
-        // FIX: используем data-атрибут вместо вложенного JSON.stringify для кнопки результатов
+       
         var fDataAttr = 'data-fid="'+f.id+'"';
         return '<div class="card">'+
           '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'+
@@ -627,7 +618,7 @@ function toggleFormActive(id, newState, type) {
   sbFetch('kv_forms?id=eq.'+id, {method:'PATCH', body:JSON.stringify({is_active: newState})}).then(function(){ loadAdmForms(type); }).catch(function(){ toast('Ошибка','err'); });
 }
 
-// ===== RESULTS — FIX: грузим форму отдельным запросом по id =====
+
 var RES_FORM = null, RES_TYPE = null, RES_RESPS = null;
 
 function openResults(formId, type, title) {
@@ -636,7 +627,7 @@ function openResults(formId, type, title) {
   document.getElementById('res-export-btn').style.display = 'none';
   openModal('ov-results');
 
-  // Загружаем форму и ответы параллельно
+
   Promise.all([
     sbFetch('kv_forms?id=eq.'+formId+'&select=*').then(function(r){return r.json()}),
     sbFetch('kv_responses?form_id=eq.'+formId+'&select=*&order=submitted_at.desc').then(function(r){return r.json()})
@@ -680,7 +671,7 @@ function renderResults(f, type, resps) {
       resps.forEach(function(r) {
         var ans = (r.answers||[])[qi];
         if (ans && ans.value) {
-          // Показываем реального отправителя всегда
+
           var senderDisp = r.user_name || r.user_email || '—';
           var anonMark = r.is_anonymous ? ' <span class="spy-badge">&#128065; Анонимно</span>' : '';
           html += '<div style="padding:7px 10px;background:var(--card2);border-radius:var(--radius-xs);font-size:13px;margin-bottom:4px;border-left:2px solid var(--y)"><span style="font-size:10px;color:var(--muted);font-weight:700">'+esc(senderDisp)+anonMark+'</span><br>'+esc(ans.value)+'</div>';
@@ -734,7 +725,6 @@ function renderResults(f, type, resps) {
   document.getElementById('res-body').innerHTML = html;
 }
 
-// ===== ДОНАТ-ДИАГРАММА: распределение результатов теста по группам =====
 function scoreDonutHtml(scores) {
   var hi = scores.filter(function(s){return s>=70;}).length;
   var mid = scores.filter(function(s){return s>=40 && s<70;}).length;
@@ -767,7 +757,7 @@ function scoreDonutHtml(scores) {
     '</div>';
 }
 
-// ===== ЭКСПОРТ РЕЗУЛЬТАТОВ В EXCEL =====
+
 function exportResultsExcel() {
   if (!RES_FORM || !RES_RESPS || !RES_RESPS.length) { toast('Нет данных для экспорта', 'err'); return; }
   if (typeof XLSX === 'undefined') { toast('Библиотека Excel не загрузилась. Проверьте интернет-соединение.', 'err'); return; }
@@ -803,7 +793,7 @@ function exportResultsExcel() {
   toast('Файл скачан', 'ok');
 }
 
-// ===== CREATE FORM =====
+
 function openCreate(type) {
   CREATING_TYPE = type;
   QUESTIONS = [];
@@ -889,8 +879,6 @@ function saveForm() {
   if (!title) { toast('Введите название', 'err'); return; }
   if (!QUESTIONS.length) { toast('Добавьте хотя бы один вопрос', 'err'); return; }
 
-  // Для тестов проверяем, что у каждого вопроса с вариантами отмечен
-  // хотя бы один правильный ответ — иначе сотрудник гарантированно получит 0%.
   if (CREATING_TYPE === 'quiz') {
     var unmarked = [];
     QUESTIONS.forEach(function(q, qi) {
@@ -912,7 +900,7 @@ function saveForm() {
   }).catch(function(){ toast('Ошибка соединения', 'err'); });
 }
 
-// ===== ADMIN USERS =====
+
 var NU_TYPE = 'user';
 var PASS_CHANGE_ID = null;
 var ALL_USERS = [];
