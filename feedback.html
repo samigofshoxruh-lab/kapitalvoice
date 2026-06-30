@@ -21,7 +21,7 @@
 .tab-btn{padding:8px 16px;font-size:13px;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:"Inter",sans-serif;transition:all .14s}
 .tab-btn.on{color:var(--dark);border-bottom-color:var(--y)}
 
-/* ===== Выбор типа обращения ===== */
+
 .type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .type-card{border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center;cursor:pointer;background:var(--card2);transition:all .15s}
 .type-card:hover{border-color:var(--border2)}
@@ -140,7 +140,7 @@ function switchTab(tab) {
   else renderMyMessages();
 }
 
-var MSG_TYPE = null; // 'complaint' | 'suggestion' | 'other'
+var MSG_TYPE = null;
 
 function renderWrite() {
   MSG_TYPE = null;
@@ -180,13 +180,10 @@ function selectType(type) {
     c.classList.toggle('sel', c.dataset.type === type);
   });
 
-  // Поле "Тема обращения" нужно только для своей темы;
-  // для жалобы/предложения тема подставляется автоматически.
   var subjWrap = document.getElementById('subject-wrap');
   subjWrap.style.display = (type === 'other') ? 'block' : 'none';
 
-  // Предложение нельзя отправить анонимно — скрываем переключатель
-  // и принудительно выключаем анонимный режим
+
   var anonWrap = document.getElementById('anon-wrap');
   var anonToggle = document.getElementById('msg-anon');
   if (type === 'suggestion') {
@@ -232,8 +229,7 @@ function sendMessage() {
     subj = typeDefaultSubject(MSG_TYPE);
   }
 
-  // Анонимность физически запрещена для предложений —
-  // проверяем на уровне отправки, а не только в интерфейсе
+
   var anonEl = document.getElementById('msg-anon');
   var isAnon = (MSG_TYPE !== 'suggestion') && anonEl && anonEl.classList.contains('active');
 
@@ -250,23 +246,20 @@ function sendMessage() {
   sendMessagePayload(payload, true);
 }
 
-// Отправляет обращение в Supabase. Если колонка msg_type ещё не создана
-// в базе (старая схема без обновления), автоматически повторяет запрос
-// без этого поля, чтобы обращение всё равно дошло, и предупреждает админа.
+
 function sendMessagePayload(payload, allowRetryWithoutType) {
   sbFetch('kv_messages', {method:'POST', body:JSON.stringify(payload)})
     .then(function(r) {
       if (r.ok) {
         toast('Обращение отправлено!', 'ok');
-        renderWrite(); // полный сброс формы, включая тип и анонимность
+        renderWrite();
         return;
       }
-      // Читаем реальную причину ошибки от Supabase, чтобы не гадать
+ 
       r.json().then(function(errBody) {
         var msg = (errBody && (errBody.message || errBody.hint || errBody.details)) || '';
         if (allowRetryWithoutType && /msg_type/i.test(msg)) {
-          // В базе ещё нет колонки msg_type — отправляем без неё,
-          // чтобы обращение не потерялось, и сообщаем причину
+         
           var fallback = Object.assign({}, payload);
           delete fallback.msg_type;
           sendMessagePayload(fallback, false);
@@ -301,7 +294,7 @@ function renderMyMessages() {
   var tc = document.getElementById('tab-content');
   tc.innerHTML = '<div class="es"><div class="ei">&#9993;</div><div>Загрузка...</div></div>';
 
-  // Загружаем обращения этого сотрудника
+
   sbFetch('kv_messages?user_email=eq.'+encodeURIComponent(ME.email)+'&select=*&order=created_at.desc')
     .then(function(r){return r.json()})
     .then(function(msgs){
