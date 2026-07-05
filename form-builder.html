@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>KapitalVoice — Конструктор</title>
+<link rel="icon" id="favicon" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kapitalvoice.css?v=5">
+<style>
+
+.builder-shell{min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
+
+.builder-topbar{
+  position:sticky;top:0;z-index:100;
+  background:var(--card);border-bottom:3px solid var(--y);
+  padding:0 24px;height:58px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.dk .builder-topbar{background:#1a1a1a}
+.tb-logo{display:flex;align-items:center;gap:10px}
+.tb-logo img{width:32px;height:32px;object-fit:contain;border-radius:4px}
+.tb-logo-name{font-size:15px;font-weight:800;color:var(--dark)}
+.dk .tb-logo-name{color:#fff}
+.tb-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.type-chip{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.type-chip.survey{background:rgba(198,40,40,.08);color:#c62828;border:1px solid rgba(198,40,40,.2)}
+.type-chip.quiz{background:rgba(26,58,153,.07);color:#1a3a99;border:1px solid rgba(26,58,153,.2)}
+.tb-actions{display:flex;align-items:center;gap:8px}
+
+.builder-main{flex:1;display:grid;grid-template-columns:1fr 320px;gap:0;min-height:0}
+
+.builder-left{padding:24px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.builder-empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.builder-empty .ei{font-size:48px;margin-bottom:14px;opacity:.15}
+
+
+.q-card{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:var(--radius);padding:20px;
+  box-shadow:var(--shadow);position:relative;
+  animation:qIn .2s ease;
+}
+@keyframes qIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.q-card:hover{border-color:var(--border2)}
+.q-card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.q-card-num{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--y);color:#000;
+  font-size:12px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-family:"IBM Plex Mono",monospace;
+}
+.q-card-type{
+  font-size:10px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.5px;
+  padding:2px 8px;background:var(--card2);border-radius:20px;
+  border:1px solid var(--border);
+}
+.q-card-del{
+  margin-left:auto;background:transparent;border:none;
+  color:var(--muted);font-size:16px;cursor:pointer;
+  padding:4px 8px;border-radius:4px;transition:all .14s;
+  line-height:1;
+}
+.q-card-del:hover{background:rgba(211,47,47,.08);color:var(--danger)}
+
+.q-input{
+  width:100%;background:var(--card2);
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:11px 14px;font-size:15px;font-weight:500;
+  color:var(--text);outline:none;
+  transition:border-color .15s;
+  margin-bottom:12px;
+  font-family:"Inter",sans-serif;
+}
+.q-input:focus{border-color:var(--y);box-shadow:0 0 0 3px rgba(255,200,0,.12)}
+
+
+.opt-list{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.opt-row{display:flex;align-items:center;gap:8px}
+.opt-mark{
+  width:28px;height:28px;border-radius:7px;
+  border:2px solid var(--border);
+  background:var(--card2);
+  flex-shrink:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;
+  color:var(--muted);font-family:"IBM Plex Mono",monospace;
+  transition:all .14s;user-select:none;
+}
+.opt-mark:hover{border-color:var(--y);color:var(--yd)}
+.opt-mark.right{background:var(--ok);border-color:var(--ok);color:#fff;font-size:13px}
+.opt-input{
+  flex:1;background:var(--card2);
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-xs);
+  padding:8px 12px;font-size:13.5px;
+  color:var(--text);outline:none;
+  transition:border-color .14s;
+  font-family:"Inter",sans-serif;
+}
+.opt-input:focus{border-color:var(--y)}
+.opt-del{
+  background:transparent;border:none;color:var(--muted2);
+  font-size:14px;cursor:pointer;padding:4px 6px;
+  border-radius:4px;transition:all .14s;line-height:1;flex-shrink:0;
+}
+.opt-del:hover{color:var(--danger)}
+.add-opt-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  margin-top:6px;background:transparent;border:none;
+  color:var(--yd);font-size:12.5px;font-weight:600;
+  cursor:pointer;padding:4px 0;font-family:"Inter",sans-serif;
+}
+.add-opt-btn:hover{text-decoration:underline}
+.opt-hint{font-size:11px;color:var(--muted);margin-top:6px;
+  padding:6px 10px;background:var(--card2);border-radius:var(--radius-xs);
+  border-left:2px solid var(--y);}
+
+
+.builder-right{
+  background:var(--card);border-left:1px solid var(--border);
+  padding:24px;display:flex;flex-direction:column;gap:16px;
+  position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto;
+}
+.builder-right::-webkit-scrollbar{width:4px}
+.builder-right::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.panel-section{display:flex;flex-direction:column;gap:8px}
+.panel-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+
+.add-q-btn{
+  width:100%;padding:12px;border:2px dashed var(--border);
+  border-radius:var(--radius-sm);background:transparent;
+  color:var(--muted);font-size:13px;font-weight:600;
+  cursor:pointer;font-family:"Inter",sans-serif;
+  transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.add-q-btn:hover{border-color:var(--y);color:var(--dark);background:rgba(255,200,0,.04)}
+
+.q-type-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.q-type-btn{
+  padding:10px 8px;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);background:var(--card2);
+  color:var(--text);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:"Inter",sans-serif;
+  transition:all .14s;text-align:center;
+}
+.q-type-btn:hover{border-color:var(--y);background:rgba(255,200,0,.06)}
+.q-type-btn .qt-icon{font-size:18px;display:block;margin-bottom:4px}
+
+.save-btn{
+  width:100%;padding:14px;background:var(--y);color:#000;
+  border:none;border-radius:50px;font-size:15px;font-weight:800;
+  cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.save-btn:hover{background:var(--y2);transform:translateY(-1px);box-shadow:0 4px 18px rgba(255,200,0,.4)}
+.save-btn:disabled{opacity:.5;pointer-events:none}
+
+.counter-badge{
+  text-align:center;font-size:12px;color:var(--muted);
+  padding:6px 10px;background:var(--card2);border-radius:var(--radius-xs);
+}
+.counter-badge strong{color:var(--text)}
+
+.back-btn{
+  display:flex;align-items:center;gap:6px;
+  background:transparent;border:1.5px solid var(--border);
+  color:var(--muted);font-size:13px;font-weight:600;
+  padding:8px 14px;border-radius:50px;cursor:pointer;
+  transition:all .14s;font-family:"Inter",sans-serif;
+}
+.back-btn:hover{border-color:var(--text);color:var(--text)}
+
+.preview-card{
+  background:linear-gradient(135deg,var(--y) 0%,var(--y2) 100%);
+  color:#000;border-radius:var(--radius-sm);padding:14px 16px;
+  font-size:12.5px;font-weight:600;line-height:1.5;
+}
+
+@media(max-width:900px){
+  .builder-main{grid-template-columns:1fr}
+  .builder-right{
+    position:static;height:auto;
+    border-left:none;border-top:1px solid var(--border);
+  }
+}
+@media(max-width:600px){
+  .builder-left{padding:14px}
+  .builder-topbar{padding:0 14px}
+  .q-type-btns{grid-template-columns:1fr 1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="builder-shell">
+
+  <div class="builder-topbar">
+    <div class="tb-logo">
+      <img id="logo-img" src="" alt="KB">
+      <span class="tb-logo-name">KapitalVoice</span>
+    </div>
+    <div class="tb-title">
+      <span id="tb-type-chip" class="type-chip">—</span>
+      <span id="tb-title-preview" style="color:var(--muted)">Новая форма</span>
+    </div>
+    <div class="tb-actions">
+      <button class="back-btn" onclick="goBack()">&#8592; Назад</button>
+      <button class="hb" onclick="togTheme()" title="Тема" style="background:transparent;border:1.5px solid var(--border);color:var(--muted);font-size:16px;padding:6px 10px;border-radius:var(--radius-xs);cursor:pointer;transition:all .14s">&#9788;</button>
+    </div>
+  </div>
+
+  <div class="builder-main">
+  
+    <div class="builder-left" id="q-list">
+      <div class="builder-empty">
+        <div class="ei">&#128203;</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Добавьте первый вопрос</div>
+        <div style="font-size:13px">Выберите тип вопроса справа →</div>
+      </div>
+    </div>
+
+  
+    <div class="builder-right">
+      <div class="panel-section">
+        <div class="panel-label">Название формы</div>
+        <input class="fi" id="cf-title" placeholder="Введите название..." oninput="syncTitle()" style="margin-bottom:0">
+        <input class="fi" id="cf-desc" placeholder="Описание (необязательно)" style="margin-bottom:0">
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-label">Добавить вопрос</div>
+        <div class="q-type-btns">
+          <button class="q-type-btn" onclick="addQuestion('text')">
+            <span class="qt-icon">&#128221;</span>Текст
+          </button>
+          <button class="q-type-btn" onclick="addQuestion('single')">
+            <span class="qt-icon">&#9711;</span>Один выбор
+          </button>
+          <button class="q-type-btn" onclick="addQuestion('multi')">
+            <span class="qt-icon">&#9745;</span>Несколько
+          </button>
+        </div>
+      </div>
+
+      <div class="counter-badge" id="q-counter">Вопросов: <strong>0</strong></div>
+
+      <div class="panel-section">
+        <div class="preview-card" id="preview-card">
+          &#128161; Для теста отметьте правильные ответы — кружок слева от варианта.
+          Для опроса правильные ответы не нужны.
+        </div>
+      </div>
+
+      <div style="margin-top:auto">
+        <button class="save-btn" id="save-btn" onclick="saveForm()" disabled>
+          &#10003; Сохранить и опубликовать
+        </button>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px" id="save-hint">
+          Добавьте название и хотя бы один вопрос
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+var ME = null;
+var CREATING_TYPE = '';
+var QUESTIONS = [];
+var LETTERS = ['A','B','C','D'];
+
+kvInitTheme();
+document.getElementById('logo-img').src = KV_LOGO;
+document.getElementById('favicon').href = KV_LOGO;
+
+(function(){
+  ME = kvRequireAuth('admin');
+  if (!ME) return;
+
+  var params = new URLSearchParams(window.location.search);
+  CREATING_TYPE = params.get('type') || 'survey';
+
+  var chip = document.getElementById('tb-type-chip');
+  chip.textContent = CREATING_TYPE === 'quiz' ? '&#127942; Тест' : '&#128203; Опрос';
+  chip.innerHTML = CREATING_TYPE === 'quiz' ? '&#127942; Тест' : '&#128203; Опрос';
+  chip.className = 'type-chip ' + CREATING_TYPE;
+
+  document.getElementById('cf-title').placeholder = CREATING_TYPE === 'quiz' ? 'Например: Тест по продуктам банка' : 'Например: Опрос удовлетворённости';
+
+  if (CREATING_TYPE === 'quiz') {
+    document.getElementById('preview-card').innerHTML =
+      '&#127942; <strong>Тест:</strong> отметьте правильный ответ — кружок слева от варианта станет зелёным ✓. Сотрудник увидит процент правильных ответов.';
+  } else {
+    document.getElementById('preview-card').innerHTML =
+      '&#128203; <strong>Опрос:</strong> правильные ответы не нужны. Вы увидите статистику ответов в разделе «Результаты».';
+  }
+
+  renderAll();
+})();
+
+function goBack() {
+  if (QUESTIONS.length && !confirm('Вернуться? Несохранённые вопросы будут удалены.')) return;
+  window.location.href = 'admin.html';
+}
+
+function syncTitle() {
+  var t = document.getElementById('cf-title').value.trim();
+  var prev = document.getElementById('tb-title-preview');
+  prev.textContent = t || 'Новая форма';
+  prev.style.color = t ? 'var(--text)' : 'var(--muted)';
+  updateSaveBtn();
+}
+
+function updateSaveBtn() {
+  var title = document.getElementById('cf-title').value.trim();
+  var btn = document.getElementById('save-btn');
+  var hint = document.getElementById('save-hint');
+  var cnt = document.getElementById('q-counter');
+  var n = QUESTIONS.length;
+  cnt.innerHTML = 'Вопросов: <strong>'+n+'</strong>';
+
+  if (!title) { btn.disabled = true; hint.textContent = 'Введите название формы'; return; }
+  if (!n) { btn.disabled = true; hint.textContent = 'Добавьте хотя бы один вопрос'; return; }
+  btn.disabled = false;
+  hint.textContent = 'Нажмите, чтобы опубликовать для сотрудников';
+}
+
+
+function addQuestion(type) {
+  syncAll();
+  QUESTIONS.push({
+    type: type,
+    text: '',
+    options: (type !== 'text') ? [{text:'',correct:false},{text:'',correct:false}] : []
+  });
+  renderAll();
+
+  setTimeout(function(){
+    var cards = document.querySelectorAll('.q-card');
+    if (cards.length) cards[cards.length-1].scrollIntoView({behavior:'smooth',block:'nearest'});
+  }, 50);
+}
+
+function removeQuestion(i) {
+  syncAll();
+  QUESTIONS.splice(i, 1);
+  renderAll();
+}
+
+function addOption(qi) {
+  syncAll();
+  if (QUESTIONS[qi].options.length >= 4) { toast('Максимум 4 варианта (A–D)', 'err'); return; }
+  QUESTIONS[qi].options.push({text:'',correct:false});
+  renderAll();
+ 
+  setTimeout(function(){
+    var inp = document.getElementById('qo-'+qi+'-'+(QUESTIONS[qi].options.length-1));
+    if (inp) inp.focus();
+  }, 30);
+}
+
+function removeOption(qi, oi) {
+  syncAll();
+  if (QUESTIONS[qi].options.length <= 1) { toast('Минимум один вариант', 'err'); return; }
+  QUESTIONS[qi].options.splice(oi, 1);
+  renderAll();
+}
+
+function toggleCorrect(qi, oi) {
+  syncAll();
+  if (QUESTIONS[qi].type === 'single') {
+    QUESTIONS[qi].options.forEach(function(o){ o.correct = false; });
+  }
+  QUESTIONS[qi].options[oi].correct = !QUESTIONS[qi].options[oi].correct;
+  renderAll();
+}
+
+function syncAll() {
+  QUESTIONS.forEach(function(q, qi){
+    var t = document.getElementById('qt-'+qi);
+    if (t) q.text = t.value;
+    if (q.options) {
+      q.options.forEach(function(opt, oi){
+        var inp = document.getElementById('qo-'+qi+'-'+oi);
+        if (inp) opt.text = inp.value;
+      });
+    }
+  });
+}
+
+function renderAll() {
+  var list = document.getElementById('q-list');
+  if (!QUESTIONS.length) {
+    list.innerHTML =
+      '<div class="builder-empty">'+
+      '<div class="ei">&#128203;</div>'+
+      '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Добавьте первый вопрос</div>'+
+      '<div style="font-size:13px">Выберите тип вопроса справа →</div>'+
+      '</div>';
+    updateSaveBtn();
+    return;
+  }
+
+  list.innerHTML = QUESTIONS.map(function(q, qi){
+    var typeLbl = q.type==='text' ? '&#128221; Текст' : q.type==='single' ? '&#9711; Один ответ' : '&#9745; Несколько';
+    var html =
+      '<div class="q-card" id="qcard-'+qi+'">'+
+      '<div class="q-card-head">'+
+        '<div class="q-card-num">'+(qi+1)+'</div>'+
+        '<div class="q-card-type">'+typeLbl+'</div>'+
+        '<button class="q-card-del" onclick="removeQuestion('+qi+')" title="Удалить вопрос">&#128465;</button>'+
+      '</div>'+
+      '<input id="qt-'+qi+'" class="q-input" value="'+esc(q.text||'')+'" placeholder="Текст вопроса...">';
+
+    if (q.type !== 'text' && q.options) {
+      var isQuiz = CREATING_TYPE === 'quiz';
+      html += '<div class="opt-list">';
+      q.options.forEach(function(opt, oi){
+        var letter = LETTERS[oi] || (oi+1);
+        var markClass = 'opt-mark' + (opt.correct ? ' right' : '');
+        var markContent = opt.correct ? '&#10003;' : letter;
+        html +=
+          '<div class="opt-row">'+
+          (isQuiz ? '<div class="'+markClass+'" onclick="toggleCorrect('+qi+','+oi+')" title="Кликните, чтобы отметить правильным">'+markContent+'</div>' : '<div class="opt-mark" style="cursor:default;opacity:.4">'+letter+'</div>')+
+          '<input id="qo-'+qi+'-'+oi+'" class="opt-input" value="'+esc(opt.text||'')+'" placeholder="Вариант '+letter+'...">'+
+          '<button class="opt-del" onclick="removeOption('+qi+','+oi+')" title="Удалить вариант">&#10005;</button>'+
+          '</div>';
+      });
+      if (q.options.length < 4) {
+        html += '<button class="add-opt-btn" onclick="addOption('+qi+')">+ вариант '+LETTERS[q.options.length]+'</button>';
+      } else {
+        html += '<div style="font-size:11px;color:var(--muted);margin-top:4px">Максимум 4 варианта (A–D)</div>';
+      }
+      if (isQuiz) {
+        var hasCorrect = q.options.some(function(o){ return o.correct; });
+        if (!hasCorrect) {
+          html += '<div class="opt-hint">&#9888; Отметьте правильный ответ — кликните на букву</div>';
+        }
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }).join('');
+
+  updateSaveBtn();
+}
+
+function saveForm() {
+  syncAll();
+  var title = document.getElementById('cf-title').value.trim();
+  var desc = document.getElementById('cf-desc').value.trim();
+  if (!title) { toast('Введите название', 'err'); document.getElementById('cf-title').focus(); return; }
+  if (!QUESTIONS.length) { toast('Добавьте хотя бы один вопрос', 'err'); return; }
+
+
+  if (CREATING_TYPE === 'quiz') {
+    var unmarked = [];
+    QUESTIONS.forEach(function(q, qi){
+      if ((q.type === 'single' || q.type === 'multi') && q.options) {
+        if (!q.options.some(function(o){ return o.correct; })) unmarked.push(qi+1);
+      }
+    });
+    if (unmarked.length) {
+      toast('Отметьте правильный ответ в вопрос(ах): '+unmarked.join(', '), 'err');
+      
+      var card = document.getElementById('qcard-'+(unmarked[0]-1));
+      if (card) card.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+  }
+
+  var btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Сохранение...';
+
+  var payload = {
+    title: title,
+    description: desc || null,
+    type: CREATING_TYPE,
+    questions: QUESTIONS,
+    is_active: true,
+    created_by: ME.email || ME.login
+  };
+
+  sbFetch('kv_forms', {method:'POST', body:JSON.stringify(payload)})
+    .then(function(r){
+      if (r.ok) {
+        toast('&#10003; Форма опубликована!', 'ok');
+       
+        setTimeout(function(){
+          window.location.href = 'admin.html?view=adm-'+CREATING_TYPE+'s';
+        }, 800);
+      } else {
+        r.json().then(function(e){
+          toast('Ошибка: '+(e && e.message || 'неизвестна'), 'err');
+        }).catch(function(){ toast('Ошибка сохранения', 'err'); });
+        btn.disabled = false;
+        btn.innerHTML = '&#10003; Сохранить и опубликовать';
+      }
+    }).catch(function(){
+      toast('Ошибка соединения', 'err');
+      btn.disabled = false;
+      btn.innerHTML = '&#10003; Сохранить и опубликовать';
+    });
+}
+</script>
+</body>
+</html>
