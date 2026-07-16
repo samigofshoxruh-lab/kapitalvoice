@@ -493,7 +493,7 @@ function saveForm() {
     created_by: ME.email || ME.login
   };
 
-  sbFetch('kv_forms', {method:'POST', body:JSON.stringify(payload)})
+  sbFetch('kv_forms', {method:'POST', body:JSON.stringify(payload), headers:{'Prefer':'return=minimal'}})
     .then(function(r){
       if (r.ok) {
         toast('&#10003; Форма опубликована!', 'ok');

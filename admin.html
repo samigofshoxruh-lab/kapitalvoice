@@ -560,8 +560,11 @@ function saveReply() {
 function deleteMessage(id) {
   if (!confirm('Удалить обращение? Оно также исчезнет у сотрудника.')) return;
   sbFetch('kv_messages?id=eq.'+id, {method:'DELETE'})
-    .then(function(){ toast('Обращение удалено', 'ok'); loadAdmMessages(); })
-    .catch(function(){ toast('Ошибка', 'err'); });
+    .then(function(r){
+      if (r.ok) { toast('Обращение удалено', 'ok'); loadAdmMessages(); }
+      else { toast('Ошибка удаления', 'err'); }
+    })
+    .catch(function(){ toast('Ошибка соединения', 'err'); });
 }
 
 
@@ -601,11 +604,27 @@ function loadAdmForms(type) {
 
 function deleteForm(id, type) {
   if (!confirm('Удалить? Все ответы тоже будут удалены.')) return;
-  sbFetch('kv_forms?id=eq.'+id, {method:'DELETE'}).then(function(){ toast('Удалено','ok'); loadAdmForms(type); }).catch(function(){ toast('Ошибка','err'); });
+  sbFetch('kv_forms?id=eq.'+id, {method:'DELETE', headers:{'Prefer':'return=minimal'}})
+    .then(function(r) {
+      if (r.ok) { toast('Удалено', 'ok'); loadAdmForms(type); return; }
+      r.text().then(function(txt) {
+        var e = null; try { e = JSON.parse(txt); } catch(x) {}
+        toast('Ошибка удаления' + (e && e.message ? ': ' + e.message : ''), 'err');
+      });
+    })
+    .catch(function(){ toast('Ошибка соединения', 'err'); });
 }
 
 function toggleFormActive(id, newState, type) {
-  sbFetch('kv_forms?id=eq.'+id, {method:'PATCH', body:JSON.stringify({is_active: newState})}).then(function(){ loadAdmForms(type); }).catch(function(){ toast('Ошибка','err'); });
+  sbFetch('kv_forms?id=eq.'+id, {method:'PATCH', body:JSON.stringify({is_active: newState}), headers:{'Prefer':'return=minimal'}})
+    .then(function(r) {
+      if (r.ok) { loadAdmForms(type); return; }
+      r.text().then(function(txt) {
+        var e = null; try { e = JSON.parse(txt); } catch(x) {}
+        toast('Ошибка' + (e && e.message ? ': ' + e.message : ''), 'err');
+      });
+    })
+    .catch(function(){ toast('Ошибка соединения', 'err'); });
 }
 
 

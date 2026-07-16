@@ -621,7 +621,7 @@ function submitQuiz() {
   // подменить результат через сетевую вкладку/консоль больше нельзя.
   sbRpc('kv_submit_response', {
     p_form_id: FORM.id,
-    p_user_email: ME.email,
+    p_user_email: ME.email || ME.login || '',
     p_user_name: ME.name || ME.email,
     p_is_anonymous: false,
     p_answers: answers

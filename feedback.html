@@ -235,7 +235,7 @@ function sendMessage() {
   var isAnon = (MSG_TYPE !== 'suggestion') && anonEl && anonEl.classList.contains('active');
 
   var payload = {
-    user_email: ME.email,
+    user_email: ME.email || ME.login || '',
     user_name: ME.name || ME.email,
     is_anonymous: isAnon,
     msg_type: MSG_TYPE,
@@ -294,7 +294,7 @@ function renderMyMessages() {
   tc.innerHTML = '<div class="es"><div class="ei">&#9993;</div><div>Загрузка...</div></div>';
 
   
-  sbFetch('kv_messages?user_email=eq.'+encodeURIComponent(ME.email)+'&select=*&order=created_at.desc')
+  sbFetch('kv_messages?user_email=eq.'+encodeURIComponent(ME.email||ME.login||'')+'&select=*&order=created_at.desc')
     .then(function(r){return r.json()})
     .then(function(msgs){
       if (!msgs || !msgs.length) {
