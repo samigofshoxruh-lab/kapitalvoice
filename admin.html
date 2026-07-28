@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>KapitalVoice — Админ-панель</title>
 <link rel="icon" id="favicon" href="">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFC800">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KapitalVoice">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://prxmupaitdmjcafucunx.supabase.co">
@@ -606,10 +614,22 @@ function deleteForm(id, type) {
   if (!confirm('Удалить? Все ответы тоже будут удалены.')) return;
   sbFetch('kv_forms?id=eq.'+id, {method:'DELETE', headers:{'Prefer':'return=minimal'}})
     .then(function(r) {
-      if (r.ok) { toast('Удалено', 'ok'); loadAdmForms(type); return; }
-      r.text().then(function(txt) {
-        var e = null; try { e = JSON.parse(txt); } catch(x) {}
-        toast('Ошибка удаления' + (e && e.message ? ': ' + e.message : ''), 'err');
+      if (!r.ok) {
+        return r.text().then(function(txt) {
+          var e = null; try { e = JSON.parse(txt); } catch(x) {}
+          toast('Ошибка удаления' + (e && e.message ? ': ' + e.message : ''), 'err');
+        });
+      }
+      // PostgREST может ответить "успехом", даже если ни одна строка не
+      // подошла под фильтр и по факту ничего не удалено — поэтому статуса
+      // ответа недостаточно. Перепроверяем напрямую, точно ли запись исчезла.
+      return sbRpc('kv_admin_get_form', { p_token: ME.token, p_id: id }).then(function(check) {
+        if (check && check.length) {
+          toast('Не удалилось: запись всё ещё в базе. Скорее всего, не хватает прав DELETE на таблице kv_forms — сообщите об этом.', 'err');
+        } else {
+          toast('Удалено', 'ok');
+          loadAdmForms(type);
+        }
       });
     })
     .catch(function(){ toast('Ошибка соединения', 'err'); });

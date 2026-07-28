@@ -192,3 +192,15 @@ function kvInitMobileMenu() {
     });
   });
 }
+
+// ===== PWA: регистрация service worker =====
+// Даёт возможность "установить" сайт на телефон (иконка на главном экране,
+// запуск без адресной строки браузера) и ускоряет повторные загрузки статики.
+// Сами данные (Supabase) не кэшируются — см. комментарии в sw.js.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(err) {
+      console.warn('Service worker не зарегистрирован:', err);
+    });
+  });
+}
