@@ -66,6 +66,9 @@
           <button class="lb" onclick="showView('quizzes')">
             <span>&#127942;</span><span class="lb-txt">Тесты</span><span class="bdg" id="sb-qz-cnt">0</span>
           </button>
+          <button class="lb" onclick="window.location.href='news.html'">
+            <span>&#128240;</span><span class="lb-txt">Новости</span><span class="bdg" id="sb-news-cnt">0</span>
+          </button>
           <div class="hdiv"></div>
           <button class="lb" onclick="window.location.href='feedback.html'">
             <span>&#9993;</span><span class="lb-txt">Написать обращение</span>
@@ -120,6 +123,7 @@ function renderHome(mc) {
     '<div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:14px">Здесь вы можете пройти опросы и тесты, а также отправить обращение руководству.</div>'+
     '<button class="cpbtn" style="padding:9px 20px;font-size:13px;margin-bottom:8px" onclick="window.location.href=\'feedback.html\'">&#9993; Написать обращение</button>'+
     '</div>'+
+    '<div id="home-news-section" style="margin-bottom:20px"></div>'+
     '<div class="mon" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">'+
     '<div class="mc"><div class="mcl">Доступно опросов</div><div class="mcv" id="h-sq">-</div><div class="mcs">Ждут участия</div></div>'+
     '<div class="mc"><div class="mcl">Доступно тестов</div><div class="mcv" id="h-qz">-</div><div class="mcs">Проверьте знания</div></div>'+
@@ -190,6 +194,50 @@ function renderHome(mc) {
     document.getElementById('h-sq').textContent = '?';
     document.getElementById('h-qz').textContent = '?';
   });
+
+  loadHomeNews();
+}
+
+function loadHomeNews() {
+  var sec = document.getElementById('home-news-section');
+  if (!sec) return;
+  var ident = ME.email || ME.login || '';
+  Promise.all([
+    sbFetch('kv_news?select=*&order=created_at.desc&limit=1').then(function(r){return r.json();}),
+    sbFetch('kv_news?select=id,created_at&order=created_at.desc').then(function(r){return r.json();}),
+    sbFetch('kv_news_reads?user_email=eq.'+encodeURIComponent(ident)+'&select=news_id').then(function(r){return r.json();})
+  ]).then(function(res){
+    var latest = (res[0]||[])[0];
+    var allIds = (res[1]||[]).map(function(x){return x.id;});
+    var readIds = (res[2]||[]).map(function(x){return x.news_id;});
+    var unreadCount = allIds.filter(function(id){ return readIds.indexOf(id) === -1; }).length;
+    setEl('sb-news-cnt', unreadCount);
+
+    if (!latest) { sec.innerHTML = ''; return; }
+
+    var isRead = readIds.indexOf(latest.id) !== -1;
+    var excerpt = (latest.body||'').slice(0, 110);
+    var thumb = latest.image_data ? '<img src="'+latest.image_data+'" style="width:56px;height:56px;border-radius:var(--radius-sm);object-fit:cover;flex-shrink:0">' : '';
+
+    var banner = unreadCount > 0
+      ? '<div style="font-size:12px;font-weight:700;color:var(--yd);margin-bottom:8px">&#128276; '+unreadCount+' '+(unreadCount===1?'непрочитанная новость':'непрочитанных новостей')+'</div>'
+      : '';
+
+    sec.innerHTML =
+      banner +
+      '<div class="card" style="display:flex;gap:12px;align-items:center;cursor:pointer" onclick="window.location.href=\'news.html?id='+latest.id+'\'">'+
+      thumb +
+      '<div style="min-width:0;flex:1">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'+
+      '<span class="lt lt-a">&#128240; Новости</span>'+
+      (!isRead ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--y);border:2px solid var(--yd);display:inline-block"></span>' : '')+
+      '</div>'+
+      '<div style="font-size:14px;font-weight:700;color:var(--dark)">'+esc(latest.title)+'</div>'+
+      '<div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(excerpt)+'</div>'+
+      '</div>'+
+      '<span style="font-size:12px;color:var(--muted);flex-shrink:0">Читать &#8594;</span>'+
+      '</div>';
+  }).catch(function(){ sec.innerHTML = ''; });
 }
 
 function renderForms(mc, type) {

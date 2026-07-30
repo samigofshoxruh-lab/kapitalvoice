@@ -12,6 +12,7 @@ var SHELL_FILES = [
   'forms.html',
   'feedback.html',
   'quiz-take.html',
+  'news.html',
   'admin.html',
   'form-builder.html',
   'kapitalvoice.css',

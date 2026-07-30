@@ -128,6 +128,9 @@
           <button class="lb" onclick="showView('adm-quizzes')">
             <span>&#127942;</span><span class="lb-txt">Тесты</span>
           </button>
+          <button class="lb" onclick="showView('adm-news')">
+            <span>&#128240;</span><span class="lb-txt">Новости</span>
+          </button>
           <button class="lb" onclick="showView('adm-users')">
             <span>&#128101;</span><span class="lb-txt">Сотрудники</span>
           </button>
@@ -235,6 +238,42 @@
   </div>
 </div>
 
+<div class="overlay" id="ov-news-editor">
+  <div class="modal" style="max-width:560px">
+    <div class="mh">
+      <div class="mh-t" id="news-ed-title">Новая новость</div>
+      <button class="close-btn" onclick="closeModal('ov-news-editor')">✕</button>
+    </div>
+    <div class="mb">
+      <label class="fl">Заголовок</label>
+      <input class="fi" id="news-ed-title-i" placeholder="Заголовок новости">
+      <label class="fl">Текст</label>
+      <textarea class="fta" id="news-ed-body-i" placeholder="Текст новости..." style="min-height:140px"></textarea>
+      <label class="fl">Фото (необязательно)</label>
+      <input type="file" accept="image/*" id="news-ed-file" onchange="handleNewsImageSelect(event)">
+      <div id="news-ed-preview-wrap" style="margin-top:10px;display:none">
+        <img id="news-ed-preview" style="max-width:100%;max-height:220px;border-radius:var(--radius-sm);display:block">
+        <button class="bng" style="margin-top:8px" onclick="removeNewsImage()">&#10005; Убрать фото</button>
+      </div>
+      <div class="err" id="news-ed-err"></div>
+    </div>
+    <div class="mf">
+      <button class="bng" onclick="closeModal('ov-news-editor')">Отмена</button>
+      <button class="bnok" onclick="saveNews()">&#10003; Опубликовать</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-news-reads">
+  <div class="modal" style="max-width:520px">
+    <div class="mh">
+      <div class="mh-t" id="news-reads-title">Кто ознакомился</div>
+      <button class="close-btn" onclick="closeModal('ov-news-reads')">✕</button>
+    </div>
+    <div class="mb" id="news-reads-body"></div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="config.js"></script>
@@ -263,7 +302,7 @@ kvBindOverlayClose();
 function showView(v) {
   CURRENT_VIEW = v;
   document.querySelectorAll('.lb').forEach(function(b){ b.classList.remove('on'); });
-  var btnMap = {'adm-dashboard':0,'adm-messages':1,'adm-surveys':2,'adm-quizzes':3,'adm-users':4};
+  var btnMap = {'adm-dashboard':0,'adm-messages':1,'adm-surveys':2,'adm-quizzes':3,'adm-news':4,'adm-users':5};
   var lbs = document.querySelectorAll('.lf .lb');
   if (btnMap[v] !== undefined && lbs[btnMap[v]]) lbs[btnMap[v]].classList.add('on');
   var mc = document.getElementById('main-content');
@@ -272,6 +311,7 @@ function showView(v) {
     case 'adm-messages': renderAdmMessages(mc); break;
     case 'adm-surveys': renderAdmForms(mc, 'survey'); break;
     case 'adm-quizzes': renderAdmForms(mc, 'quiz'); break;
+    case 'adm-news': renderAdmNews(mc); break;
     case 'adm-users': renderAdmUsers(mc); break;
   }
 }
@@ -645,6 +685,187 @@ function toggleFormActive(id, newState, type) {
       });
     })
     .catch(function(){ toast('Ошибка соединения', 'err'); });
+}
+
+// ===== НОВОСТИ =====
+var ALL_NEWS_ADM = [];
+var NEWS_EDIT_ID = null;    // null = создаём новую, иначе редактируем существующую
+var NEWS_IMAGE_DATA = null; // base64 data URL выбранного/сжатого фото
+
+function renderAdmNews(mc) {
+  mc.innerHTML = '<div class="ctrl" style="margin-bottom:14px"><div class="vtit">Новости</div><button class="bnok" onclick="openNewsEditor()">+ Создать</button></div><div class="cg" id="adm-news-grid"><div class="es"><div class="ei">&#128240;</div><div>Загрузка...</div></div></div>';
+  loadAdmNews();
+}
+
+function loadAdmNews() {
+  sbFetch('kv_news?select=*&order=created_at.desc').then(function(r){return r.json();})
+    .then(function(list){
+      ALL_NEWS_ADM = list || [];
+      var g = document.getElementById('adm-news-grid');
+      if (!g) return;
+      if (!ALL_NEWS_ADM.length) { g.innerHTML = '<div class="es"><div class="ei">&#128240;</div><div>Новостей пока нет. Создайте первую!</div></div>'; return; }
+
+      // Считаем, сколько человек ознакомилось с каждой новостью, одним запросом
+      sbFetch('kv_news_reads?select=news_id').then(function(r){return r.json();}).then(function(reads){
+        reads = reads || [];
+        var counts = {};
+        reads.forEach(function(r){ counts[r.news_id] = (counts[r.news_id]||0) + 1; });
+
+        g.innerHTML = ALL_NEWS_ADM.map(function(n){
+          var thumb = n.image_data ? '<img src="'+n.image_data+'" style="width:100%;height:120px;object-fit:cover;border-radius:var(--radius-sm);margin-bottom:10px">' : '';
+          var readCount = counts[n.id] || 0;
+          return '<div class="card">'+
+            thumb +
+            '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'+
+            '<span class="lt lt-a">&#128240; Новость</span>'+
+            '<button class="bndg bsm" onclick="deleteNews(\''+n.id+'\')">&#10005;</button>'+
+            '</div>'+
+            '<div class="ctt">'+esc(n.title)+'</div>'+
+            '<div class="cpr">'+esc((n.body||'').slice(0,120))+'</div>'+
+            '<div class="cmeta"><span class="cdt">'+fmtDate(n.created_at)+'</span></div>'+
+            '<div style="display:flex;gap:6px;margin-top:10px">'+
+            '<button class="bng" onclick="openNewsReads(\''+n.id+'\',\''+esc(n.title).replace(/'/g,"\\'")+'\')">&#128065; Ознакомились: '+readCount+'</button>'+
+            '<button class="bng" onclick="openNewsEditor(\''+n.id+'\')">&#9998; Изменить</button>'+
+            '</div>'+
+            '</div>';
+        }).join('');
+      });
+    }).catch(function(){
+      var g = document.getElementById('adm-news-grid');
+      if (g) g.innerHTML = '<div class="es"><div class="ei">&#9888;</div><div>Ошибка загрузки</div></div>';
+    });
+}
+
+function openNewsEditor(id) {
+  NEWS_EDIT_ID = id || null;
+  NEWS_IMAGE_DATA = null;
+  document.getElementById('news-ed-err').textContent = '';
+  document.getElementById('news-ed-file').value = '';
+  document.getElementById('news-ed-preview-wrap').style.display = 'none';
+
+  if (id) {
+    var n = ALL_NEWS_ADM.filter(function(x){ return x.id === id; })[0];
+    document.getElementById('news-ed-title').textContent = 'Редактировать новость';
+    document.getElementById('news-ed-title-i').value = n ? n.title : '';
+    document.getElementById('news-ed-body-i').value = n ? n.body : '';
+    if (n && n.image_data) {
+      NEWS_IMAGE_DATA = n.image_data;
+      document.getElementById('news-ed-preview').src = n.image_data;
+      document.getElementById('news-ed-preview-wrap').style.display = 'block';
+    }
+  } else {
+    document.getElementById('news-ed-title').textContent = 'Новая новость';
+    document.getElementById('news-ed-title-i').value = '';
+    document.getElementById('news-ed-body-i').value = '';
+  }
+  openModal('ov-news-editor');
+}
+
+// Сжимаем фото в браузере перед сохранением (иначе большие фото с телефона
+// раздуют базу данных) — уменьшаем до максимум 1000px по широкой стороне
+// и пережимаем в JPEG, это не увеличивает нагрузку на сервер вообще.
+function handleNewsImageSelect(event) {
+  var file = event.target.files && event.target.files[0];
+  if (!file) return;
+  if (!file.type.match(/^image\//)) { toast('Выберите файл изображения', 'err'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var maxSide = 1000;
+      var scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      var w = Math.round(img.width * scale);
+      var h = Math.round(img.height * scale);
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      NEWS_IMAGE_DATA = canvas.toDataURL('image/jpeg', 0.78);
+      document.getElementById('news-ed-preview').src = NEWS_IMAGE_DATA;
+      document.getElementById('news-ed-preview-wrap').style.display = 'block';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeNewsImage() {
+  NEWS_IMAGE_DATA = null;
+  document.getElementById('news-ed-file').value = '';
+  document.getElementById('news-ed-preview-wrap').style.display = 'none';
+}
+
+function saveNews() {
+  var title = document.getElementById('news-ed-title-i').value.trim();
+  var body = document.getElementById('news-ed-body-i').value.trim();
+  if (!title) { document.getElementById('news-ed-err').textContent = 'Введите заголовок'; return; }
+  if (!body) { document.getElementById('news-ed-err').textContent = 'Введите текст новости'; return; }
+  document.getElementById('news-ed-err').textContent = '';
+
+  var payload = { title: title, body: body, image_data: NEWS_IMAGE_DATA };
+  var req;
+  if (NEWS_EDIT_ID) {
+    req = sbFetch('kv_news?id=eq.'+NEWS_EDIT_ID, { method: 'PATCH', body: JSON.stringify(payload), headers: {'Prefer':'return=minimal'} });
+  } else {
+    payload.created_by = ME.name || ME.login || '';
+    req = sbFetch('kv_news', { method: 'POST', body: JSON.stringify(payload), headers: {'Prefer':'return=minimal'} });
+  }
+
+  req.then(function(r){
+    if (r.ok) {
+      closeModal('ov-news-editor');
+      toast('Сохранено', 'ok');
+      loadAdmNews();
+    } else {
+      r.text().then(function(txt){
+        var e = null; try { e = JSON.parse(txt); } catch(x) {}
+        document.getElementById('news-ed-err').textContent = 'Ошибка сохранения' + (e && e.message ? ': ' + e.message : '');
+      });
+    }
+  }).catch(function(){ document.getElementById('news-ed-err').textContent = 'Ошибка соединения'; });
+}
+
+function deleteNews(id) {
+  if (!confirm('Удалить новость? Отметки о прочтении тоже удалятся.')) return;
+  sbFetch('kv_news?id=eq.'+id, { method: 'DELETE', headers: {'Prefer':'return=minimal'} })
+    .then(function(r){
+      if (r.ok) { toast('Удалено', 'ok'); loadAdmNews(); }
+      else { toast('Ошибка удаления', 'err'); }
+    })
+    .catch(function(){ toast('Ошибка соединения', 'err'); });
+}
+
+function openNewsReads(id, title) {
+  document.getElementById('news-reads-title').textContent = '«'+title+'» — ознакомились';
+  var body = document.getElementById('news-reads-body');
+  body.innerHTML = '<div class="es"><div class="ei">&#128065;</div><div>Загрузка...</div></div>';
+  openModal('ov-news-reads');
+
+  Promise.all([
+    sbFetch('kv_news_reads?news_id=eq.'+id+'&select=*&order=read_at.desc').then(function(r){return r.json();}),
+    sbRpc('kv_admin_list_users', {p_token: ME.token})
+  ]).then(function(res){
+    var reads = res[0] || [];
+    var users = res[1] || [];
+    var totalEmployees = users.filter(function(u){ return u.role !== 'admin'; }).length;
+
+    if (!reads.length) {
+      body.innerHTML = '<div class="es"><div class="ei">&#128065;</div><div>Пока никто не ознакомился</div></div>';
+      return;
+    }
+    var html = '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Ознакомились '+reads.length+' из '+totalEmployees+' сотрудников</div>';
+    html += reads.map(function(r){
+      return '<div class="q-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px">'+
+        '<div><div style="font-weight:700;font-size:13.5px">'+esc(r.user_name||r.user_email||'—')+'</div>'+
+        '<div style="font-size:11.5px;color:var(--muted)">'+esc(r.user_email||'')+'</div></div>'+
+        '<div style="font-size:11.5px;color:var(--muted);white-space:nowrap">'+fmtDate(r.read_at)+'</div>'+
+        '</div>';
+    }).join('');
+    body.innerHTML = html;
+  }).catch(function(){
+    body.innerHTML = '<div class="es"><div class="ei">&#9888;</div><div>Ошибка загрузки</div></div>';
+  });
 }
 
 

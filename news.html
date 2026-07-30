@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>KapitalVoice — Новости</title>
+<link rel="icon" id="favicon" href="">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFC800">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KapitalVoice">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://prxmupaitdmjcafucunx.supabase.co">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kapitalvoice.css?v=5">
+<style>
+.news-search{position:relative;margin-bottom:16px}
+.news-search .fi{margin-bottom:0;padding-left:38px}
+.news-search .si{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+.news-card{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;transition:all .16s cubic-bezier(.4,0,.2,1);position:relative}
+.news-card:hover{border-color:var(--y);transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.1)}
+.news-thumb{width:64px;height:64px;border-radius:var(--radius-sm);object-fit:cover;flex-shrink:0;background:var(--card2)}
+.news-thumb-ph{width:64px;height:64px;border-radius:var(--radius-sm);flex-shrink:0;background:linear-gradient(135deg,var(--y2),var(--y));display:flex;align-items:center;justify-content:center;font-size:24px}
+.news-body{min-width:0;flex:1}
+.news-title{font-size:14.5px;font-weight:700;color:var(--dark);margin-bottom:3px}
+.news-excerpt{font-size:12.5px;color:var(--muted);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.news-meta{display:flex;align-items:center;gap:8px;margin-top:6px}
+.news-date{font-size:11px;color:var(--muted2)}
+.unread-dot{width:9px;height:9px;border-radius:50%;background:var(--y);border:2px solid var(--yd);position:absolute;top:12px;right:12px}
+.read-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--ok)}
+.news-detail-img{width:100%;border-radius:var(--radius-sm);margin-bottom:14px;display:block;max-height:360px;object-fit:cover}
+.news-detail-body{font-size:14px;color:var(--text);line-height:1.75;white-space:pre-wrap;margin-bottom:18px}
+.news-detail-date{font-size:12px;color:var(--muted);margin-bottom:10px}
+.ack-done{display:flex;align-items:center;gap:8px;padding:12px;border-radius:var(--radius-sm);background:rgba(46,125,50,.08);border:1.5px solid rgba(46,125,50,.25);color:var(--ok);font-size:13px;font-weight:700}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <button class="menu-toggle" id="menu-toggle"><span></span><span></span><span></span></button>
+    <div class="hlog">
+      <img class="hli" id="logo-img" src="" alt="KB">
+      <div>
+        <div class="hln">KapitalVoice</div>
+        <div class="hls">Kapital Bank</div>
+      </div>
+    </div>
+    <div class="hr2">
+      <div class="ub" id="u-btn">
+        <div class="rd u"></div>
+        <span id="u-nm"></span>
+        <span class="role-badge user">USER</span>
+      </div>
+      <button class="hb" onclick="togTheme()" title="Тема">&#9788;</button>
+      <button class="hb" onclick="kvLogout('index.html')">&#8594;</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="sb">
+      <div class="sbt">
+        <div class="sblab">Меню</div>
+        <div class="lf">
+          <button class="lb" onclick="window.location.href='forms.html'">
+            <span>&#127968;</span><span class="lb-txt">Главная</span>
+          </button>
+          <button class="lb" onclick="window.location.href='forms.html'">
+            <span>&#128203;</span><span class="lb-txt">Опросы</span>
+          </button>
+          <button class="lb" onclick="window.location.href='forms.html'">
+            <span>&#127942;</span><span class="lb-txt">Тесты</span>
+          </button>
+          <button class="lb on" onclick="window.location.href='news.html'">
+            <span>&#128240;</span><span class="lb-txt">Новости</span><span class="bdg" id="sb-news-cnt">0</span>
+          </button>
+          <div class="hdiv"></div>
+          <button class="lb" onclick="window.location.href='feedback.html'">
+            <span>&#9993;</span><span class="lb-txt">Написать обращение</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main" id="main-content"></div>
+  </div>
+</div>
+
+<!-- Модалка просмотра новости -->
+<div class="overlay" id="ov-news">
+  <div class="modal" id="modal-news" style="max-width:640px">
+    <div class="mh">
+      <div class="mh-t" id="news-d-title">Новость</div>
+      <button class="close-btn" onclick="closeModal('ov-news')">&#10005;</button>
+    </div>
+    <div class="mb" id="news-d-body"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+var ME = null;
+var ALL_NEWS = [];
+var MY_READS = [];
+var CURRENT_NEWS = null;
+
+document.getElementById('logo-img').src = KV_LOGO;
+document.getElementById('favicon').href = KV_LOGO;
+kvInitTheme();
+kvBindOverlayClose();
+
+(function(){
+  ME = kvRequireAuth(null);
+  if (!ME) return;
+  document.getElementById('u-nm').textContent = ME.name || ME.email;
+  loadNews();
+  kvInitMobileMenu();
+})();
+
+function myIdent() { return ME.email || ME.login || ''; }
+
+function loadNews() {
+  var mc = document.getElementById('main-content');
+  mc.innerHTML =
+    '<div style="max-width:720px">'+
+    '<div class="vtit" style="margin-bottom:14px">Новости</div>'+
+    '<div class="news-search"><span class="si">&#128269;</span><input class="fi" id="news-search-i" placeholder="Поиск по новостям..." oninput="filterNews()"></div>'+
+    '<div id="news-list"><div class="es"><div class="ei">&#128240;</div><div>Загрузка...</div></div></div>'+
+    '</div>';
+
+  Promise.all([
+    sbFetch('kv_news?select=*&order=created_at.desc').then(function(r){return r.json();}),
+    sbFetch('kv_news_reads?user_email=eq.'+encodeURIComponent(myIdent())+'&select=news_id').then(function(r){return r.json();})
+  ]).then(function(res){
+    ALL_NEWS = res[0] || [];
+    MY_READS = (res[1]||[]).map(function(x){return x.news_id;});
+    setEl('sb-news-cnt', ALL_NEWS.filter(function(n){return MY_READS.indexOf(n.id)===-1;}).length);
+    renderNewsList(ALL_NEWS);
+    var wantId = new URLSearchParams(window.location.search).get('id');
+    if (wantId) openNews(wantId);
+  }).catch(function(){
+    var el = document.getElementById('news-list');
+    if (el) el.innerHTML = '<div class="es"><div class="ei">&#9888;</div><div>Ошибка загрузки</div></div>';
+  });
+}
+
+function filterNews() {
+  var q = (document.getElementById('news-search-i').value || '').trim().toLowerCase();
+  if (!q) { renderNewsList(ALL_NEWS); return; }
+  var filtered = ALL_NEWS.filter(function(n){
+    return (n.title||'').toLowerCase().indexOf(q) !== -1 || (n.body||'').toLowerCase().indexOf(q) !== -1;
+  });
+  renderNewsList(filtered, q);
+}
+
+function renderNewsList(list, searchActive) {
+  var el = document.getElementById('news-list');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = '<div class="es"><div class="ei">&#128240;</div><div>'+(searchActive ? 'Ничего не найдено' : 'Пока нет новостей')+'</div></div>';
+    return;
+  }
+  el.innerHTML = list.map(function(n){
+    var isRead = MY_READS.indexOf(n.id) !== -1;
+    var excerpt = (n.body||'').slice(0, 140);
+    var thumb = n.image_data
+      ? '<img class="news-thumb" src="'+n.image_data+'">'
+      : '<div class="news-thumb-ph">&#128240;</div>';
+    return '<div class="news-card" onclick="openNews(\''+n.id+'\')">'+
+      (!isRead ? '<div class="unread-dot"></div>' : '')+
+      thumb+
+      '<div class="news-body">'+
+      '<div class="news-title">'+esc(n.title)+'</div>'+
+      '<div class="news-excerpt">'+esc(excerpt)+(n.body && n.body.length>140 ? '…' : '')+'</div>'+
+      '<div class="news-meta">'+
+      '<span class="news-date">'+fmtDate(n.created_at)+'</span>'+
+      (isRead ? '<span class="read-badge">&#10003; Ознакомлен(а)</span>' : '')+
+      '</div>'+
+      '</div>'+
+      '</div>';
+  }).join('');
+}
+
+function openNews(id) {
+  var n = ALL_NEWS.filter(function(x){return x.id===id;})[0];
+  if (!n) return;
+  CURRENT_NEWS = n;
+  document.getElementById('news-d-title').textContent = n.title;
+  var isRead = MY_READS.indexOf(n.id) !== -1;
+  var html = '';
+  if (n.image_data) html += '<img class="news-detail-img" src="'+n.image_data+'">';
+  html += '<div class="news-detail-date">&#128197; '+fmtDate(n.created_at)+'</div>';
+  html += '<div class="news-detail-body">'+esc(n.body||'')+'</div>';
+  if (isRead) {
+    html += '<div class="ack-done">&#10003; Вы ознакомились с этой новостью</div>';
+  } else {
+    html += '<button class="bny" onclick="markRead()">&#10003; Ознакомился(-ась)</button>';
+  }
+  document.getElementById('news-d-body').innerHTML = html;
+  openModal('ov-news');
+}
+
+function markRead() {
+  if (!CURRENT_NEWS) return;
+  var payload = { news_id: CURRENT_NEWS.id, user_email: myIdent(), user_name: ME.name || myIdent() };
+  sbFetch('kv_news_reads', { method: 'POST', body: JSON.stringify(payload), headers: {'Prefer':'return=minimal'} })
+    .then(function(r){
+      if (r.ok || r.status === 409) {
+        if (MY_READS.indexOf(CURRENT_NEWS.id) === -1) MY_READS.push(CURRENT_NEWS.id);
+        toast('Отмечено как прочитано', 'ok');
+        openNews(CURRENT_NEWS.id);
+        filterNews();
+        setEl('sb-news-cnt', ALL_NEWS.filter(function(n){return MY_READS.indexOf(n.id)===-1;}).length);
+      } else {
+        toast('Не удалось отметить прочтение', 'err');
+      }
+    })
+    .catch(function(){ toast('Ошибка соединения', 'err'); });
+}
+</script>
+</body>
+</html>
