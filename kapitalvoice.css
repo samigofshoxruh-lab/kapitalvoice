@@ -120,6 +120,9 @@ header,header *{min-width:0}
 .main{padding:20px;display:flex;flex-direction:column;gap:14px;background:var(--bg);min-width:0}
 .layout,.layout *{min-width:0}
 .mon{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mon-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:600px){.mon-3{grid-template-columns:1fr 1fr}}
+@media (max-width:340px){.mon-3{grid-template-columns:1fr}}
 .mc{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;box-shadow:var(--shadow);transition:transform .14s}
 .mc:hover{transform:translateY(-2px)}
 .mc::after{content:"";position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--y);border-radius:0 0 var(--radius) var(--radius)}
