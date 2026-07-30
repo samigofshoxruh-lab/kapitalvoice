@@ -4,7 +4,7 @@
 // ВАЖНО: запросы к Supabase (сами данные — опросы, тесты, обращения) сюда
 // НЕ попадают и никогда не кэшируются — сотрудники всегда видят свежие данные.
 
-var CACHE_NAME = 'kv-shell-v3';
+var CACHE_NAME = 'kv-shell-v4';
 
 var SHELL_FILES = [
   'index.html',
@@ -14,7 +14,7 @@ var SHELL_FILES = [
   'quiz-take.html',
   'admin.html',
   'form-builder.html',
-  'kapitalvoice.css?v=7',
+  'kapitalvoice.css?v=8',
   'config.js',
   'manifest.json',
   'icons/icon-192.png',

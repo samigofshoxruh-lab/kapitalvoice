@@ -71,18 +71,19 @@ button:focus-visible,.fi:focus-visible,.fsl:focus-visible,a:focus-visible{outlin
 
 
 header{position:sticky;top:0;z-index:100;background:#fff;border-bottom:3px solid var(--y);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:58px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+header,header *{min-width:0}
 .dk header{background:#1a1a1a}
-.hlog{display:flex;align-items:center;gap:10px;text-decoration:none}
-.hli{width:32px;height:32px;object-fit:contain;border-radius:5px}
-.hln{font-size:15px;font-weight:800;letter-spacing:.5px;color:var(--dark)}
+.hlog{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.hli{width:32px;height:32px;object-fit:contain;border-radius:5px;flex-shrink:0}
+.hln{font-size:15px;font-weight:800;letter-spacing:.5px;color:var(--dark);white-space:nowrap}
 .dk .hln{color:#fff}
 .hls{font-size:10px;color:var(--muted);margin-top:1px;letter-spacing:.3px}
-.hr2{display:flex;align-items:center;gap:8px}
+.hr2{display:flex;align-items:center;gap:8px;flex-shrink:1}
 .ub{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,200,0,.1);border:1.5px solid rgba(255,200,0,.4);border-radius:50px;font-size:12px;cursor:pointer;color:var(--dark);font-weight:600;transition:all .14s}
 .ub:hover{border-color:var(--y);background:rgba(255,200,0,.2)}
 .rd{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .rd.ra{background:var(--y)}.rd.u{background:#7c8cff}
-.hb{padding:6px 10px;background:transparent;border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);font-size:14px;cursor:pointer;transition:all .14s;font-family:"Inter",sans-serif}
+.hb{padding:6px 10px;background:transparent;border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);font-size:14px;cursor:pointer;transition:all .14s;font-family:"Inter",sans-serif;flex-shrink:0}
 .hb:hover{border-color:var(--y);color:var(--dark)}
 .dk .hb:hover{color:var(--y)}
 .role-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.5px}
@@ -264,12 +265,14 @@ input[type=checkbox]{accent-color:var(--y)}
 
 
 @media (max-width: 768px){
-  header{padding:0 14px}
+  header{padding:0 10px}
   .hln{font-size:14px}
   .hls{display:none}
-  .hr2{gap:6px}
-  .ub span:not(.role-badge){max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hr2{gap:5px}
+  .ub{padding:6px 9px}
+  .ub span:not(.role-badge){max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .role-badge{display:none}
+  .hb{padding:6px 8px}
 
   .menu-toggle{display:flex}
 
