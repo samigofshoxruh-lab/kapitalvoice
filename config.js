@@ -135,6 +135,56 @@ function kvInitFavicon() {
   link.href = KV_LOGO;
 }
 
+// ===== Новости: сжатие картинок перед сохранением в базу =====
+// Картинки хранятся как base64 прямо в строке kv_news (без отдельного
+// storage-бакета), поэтому перед сохранением уменьшаем их до разумного
+// размера и пережимаем в JPEG, чтобы не раздувать таблицу.
+function kvCompressImage(file, maxDim, quality) {
+  maxDim = maxDim || 1280;
+  quality = quality || 0.72;
+  return new Promise(function(resolve, reject) {
+    if (!file || !/^image\//.test(file.type)) { reject(new Error('Файл не является изображением')); return; }
+    var reader = new FileReader();
+    reader.onerror = function() { reject(new Error('Не удалось прочитать файл')); };
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onerror = function() { reject(new Error('Не удалось загрузить изображение')); };
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        try {
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ===== Новости: отметить как прочитанное (upsert) =====
+// Один сотрудник — одна запись на новость (unique(news_id, user_email) в базе).
+// Повторный вызов просто обновит read_at вместо ошибки дубликата.
+function kvMarkNewsRead(newsId, userEmail, userName) {
+  return sbFetch('kv_news_reads?on_conflict=news_id,user_email', {
+    method: 'POST',
+    headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify({ news_id: newsId, user_email: userEmail, user_name: userName || null, read_at: new Date().toISOString() })
+  }).then(function(r) {
+    if (!r.ok) throw new Error('Не удалось сохранить отметку');
+    return r.json();
+  });
+}
+
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtDate(s) {
   if (!s) return '—';
