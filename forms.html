@@ -17,13 +17,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://prxmupaitdmjcafucunx.supabase.co">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="kapitalvoice.css?v=5">
+<link rel="stylesheet" href="kapitalvoice.css?v=7">
 <style>
 .done-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(46,125,50,.1);color:var(--ok);border:1.5px solid rgba(46,125,50,.3)}
 .card-done{opacity:.82;pointer-events:none}
 .card-done .cpbtn{background:var(--ok);cursor:default}
 .home-card-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px}
-@media(max-width:480px){
+@media(max-width:600px){
   .home-card-row{flex-direction:column;align-items:flex-start}
   .home-card-row .bny{width:100%!important;margin-top:8px}
 }
@@ -124,7 +124,7 @@ function renderHome(mc) {
     '<button class="cpbtn" style="padding:9px 20px;font-size:13px;margin-bottom:8px" onclick="window.location.href=\'feedback.html\'">&#9993; Написать обращение</button>'+
     '</div>'+
     '<div id="home-news-section" style="margin-bottom:20px"></div>'+
-    '<div class="mon" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">'+
+    '<div class="mon" style="grid-template-columns:repeat(auto-fit,minmax(100px,1fr));margin-bottom:24px">'+
     '<div class="mc"><div class="mcl">Доступно опросов</div><div class="mcv" id="h-sq">-</div><div class="mcs">Ждут участия</div></div>'+
     '<div class="mc"><div class="mcl">Доступно тестов</div><div class="mcv" id="h-qz">-</div><div class="mcs">Проверьте знания</div></div>'+
     '<div class="mc"><div class="mcl">Мои ответы</div><div class="mcv" id="h-my">-</div><div class="mcs">Всего отправлено</div></div>'+

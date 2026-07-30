@@ -116,7 +116,8 @@ header{position:sticky;top:0;z-index:100;background:#fff;border-bottom:3px solid
 .sbbtn:hover{background:var(--y2);transform:translateY(-1px)}
 
 
-.main{padding:20px;display:flex;flex-direction:column;gap:14px;background:var(--bg)}
+.main{padding:20px;display:flex;flex-direction:column;gap:14px;background:var(--bg);min-width:0}
+.layout,.layout *{min-width:0}
 .mon{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .mc{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;box-shadow:var(--shadow);transition:transform .14s}
 .mc:hover{transform:translateY(-2px)}
@@ -304,4 +305,8 @@ input[type=checkbox]{accent-color:var(--y)}
   .ah{flex-direction:column;align-items:flex-start;gap:8px}
   .abn{font-size:16px}
   .hln{font-size:13px}
+  .hr2{gap:4px}
+  .ub{padding:6px 8px}
+  .ub span:not(.role-badge){max-width:60px}
+  .hb{padding:6px 8px}
 }
